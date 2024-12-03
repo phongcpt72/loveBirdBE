@@ -49,7 +49,7 @@ export class TelegramUserService {
             const user = await this.telegramUserRepository.findOne({ where: { telegramId } });
             return user !== undefined;
         } catch (error) {
-            console.error("Error checking Telegram ID:", error);
+            console.error("Error checking Telegram ID", error);
             return false;
         }
     }
