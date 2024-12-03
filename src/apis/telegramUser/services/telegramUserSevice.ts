@@ -95,4 +95,9 @@ export class TelegramUserService {
         }
     }
 
+    async listTelegramUsers(): Promise<string> {
+        const users = await this.telegramUserRepository.find();
+        return JSON.stringify(users);
+    }
+
 }
