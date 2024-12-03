@@ -13,7 +13,7 @@ export class TelegramUserController {
 
     @Post("/create-telegram-user")
     async createTelegramUser(
-        @QueryParams("telegramId") telegramId: number,
+        @QueryParams("telegramId")   telegramId: number,
         @QueryParams("gender") gender: string,
         @QueryParams("username") username: string,
         @QueryParams("age") age: number
@@ -21,9 +21,9 @@ export class TelegramUserController {
         return this.telegramUserService.createTelegramUser(telegramId,gender,username,age);
     }
 
-    @Get("/check-telegram-id-exists")
-    async checkTelegramIdExists(@QueryParams("telegramId") telegramId: number): Promise<boolean> {
-        return this.telegramUserService.checkTelegramIdExists(telegramId);
+    @Get("/get-telegram-user")
+    async getTelegramUser(@QueryParams("telegramId") telegramId: number): Promise<{ username: string | null; gender: string | null; age: number | null; avatar: string | null } | null> {
+        return await this.telegramUserService.getTelegramUser(telegramId);  
     }
 
     @Get("/list-telegram-user")

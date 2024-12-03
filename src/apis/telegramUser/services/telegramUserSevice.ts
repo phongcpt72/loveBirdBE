@@ -44,13 +44,27 @@ export class TelegramUserService {
         return{privateKey,publicKey}
     }
 
-    async checkTelegramIdExists(telegramId: number): Promise<boolean> {
+    async getTelegramUser(telegramId: number): Promise<{ 
+        username: string | null; 
+        gender: string | null; 
+        age: number | null; 
+        avatar: string | null 
+    } | null> {
         try {
-            const user = await this.telegramUserRepository.findOne({ where: { telegramId } });
-            return user !== undefined;
+            const user = await this.telegramUserRepository.findOne({
+                select: ["userName", "gender", "age", "avatar"],
+                where: { telegramId }
+            });
+
+            if (user) {
+                const { userName: username, gender, age, avatar } = user;
+                return { username, gender, age, avatar };
+            }
+            // Return an object with null values if the user is not found
+            return { username: null, gender: null, age: null, avatar: null };
         } catch (error) {
-            console.error("Error checking Telegram ID", error);
-            return false;
+            console.error("Error retrieving Telegram user information:", error);
+            return { username: null, gender: null, age: null, avatar: null };
         }
     }
 
