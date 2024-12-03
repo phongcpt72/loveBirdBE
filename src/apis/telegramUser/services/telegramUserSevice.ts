@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@tsed/di";
 import { In ,Not , IsNull} from "typeorm";
-import { Product, ProductRepository, User, UserRepository, HistoryRepository } from "../../../dal";
+// import { Product, ProductRepository, User, UserRepository, HistoryRepository } from "../../../dal";
 import { CreateTelegramUserDto } from "../dto/CreateTelegramUserDto";
 import { TelegramUser, TelegramUserRepository } from "../../../dal";
 import { BigNumber, ethers, FixedNumber, Contract , Wallet, providers, utils} from "ethers";

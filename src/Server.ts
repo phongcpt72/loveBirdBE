@@ -16,7 +16,7 @@ import express from "express";
 import TelegramBot, { CallbackQuery, InlineQuery, Message } from "node-telegram-bot-api";
 
 // Import the Webhook Controller
-import { WebhookController } from "./apis/event/WebhookController";
+// import { WebhookController } from "./apis/event/WebhookController";
 
 @Configuration({
   ...config,
@@ -36,7 +36,7 @@ import { WebhookController } from "./apis/event/WebhookController";
   mount: {
     "/": [...Object.values(pages)],
     "/api": [...Object.values(apis)],
-    "/webhook": [WebhookController], // Mount the webhook controller here
+    // "/webhook": [WebhookController], // Mount the webhook controller here
   },
   swagger: [
     {
