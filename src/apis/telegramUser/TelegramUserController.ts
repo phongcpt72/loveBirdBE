@@ -1,6 +1,6 @@
 import { Controller, Inject } from "@tsed/di";
 import { Res } from "@tsed/common";
-import { Get, Post, Returns,Summary } from "@tsed/schema";
+import { Get, Post, Returns, Summary, Description } from "@tsed/schema";
 import { BodyParams, PathParams, QueryParams } from "@tsed/platform-params";
 import { CreateTelegramUserDto } from "./dto/CreateTelegramUserDto";
 import { TelegramUserService } from "./services/telegramUserSevice";
@@ -13,16 +13,14 @@ export class TelegramUserController {
 
     @Post("/create-telegram-user")
     @Summary('Create a new Telegram user')
-    @Returns(201, { description: 'User created successfully' })
-    @Returns(400, { description: 'Invalid request body' })
+    @Returns(201, String).Description("User created successfully")
+    @Returns(400, String).Description("Invalid request body")
     async createTelegramUser(
     @BodyParams() body: CreateTelegramUserDto,
     @Res() res: Res
   ): Promise<void> {
     try {
-      console.log(body);
       const { telegramId, gender, username, age } = body;
-      console.log(telegramId, gender, username, age);
       const result = await this.telegramUserService.createTelegramUser(telegramId, gender, username, age);
       console.log(result);
       if (result) {
@@ -34,11 +32,6 @@ export class TelegramUserController {
       res.status(500).send({ message: 'Internal server error', error: error.message });
     }
   }
-
-
-
-
-
 
     @Get("/get-telegram-user")
     async getTelegramUser(@QueryParams("telegramId") telegramId: number): Promise<{ telegramId: number | null; username: string | null; gender: string | null; age: number | null; avatar: string | null } | null> {
