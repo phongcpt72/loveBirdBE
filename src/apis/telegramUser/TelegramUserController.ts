@@ -22,7 +22,7 @@ export class TelegramUserController {
     }
 
     @Get("/get-telegram-user")
-    async getTelegramUser(@QueryParams("telegramId") telegramId: number): Promise<{ username: string | null; gender: string | null; age: number | null; avatar: string | null } | null> {
+    async getTelegramUser(@QueryParams("telegramId") telegramId: number): Promise<{ telegramId: number | null; username: string | null; gender: string | null; age: number | null; avatar: string | null } | null> {
         return await this.telegramUserService.getTelegramUser(telegramId);  
     }
 
@@ -30,11 +30,5 @@ export class TelegramUserController {
     async listTelegramUser(@QueryParams("telegramId") telegramId: number): Promise<string> {
         return this.telegramUserService.listTelegramUser(telegramId);
     }
-
-    @Get("/list-telegram-users-Kenji")
-    async listTelegramUsers(): Promise<string> {
-        return this.telegramUserService.listTelegramUsers();
-    }
-
 
 }
