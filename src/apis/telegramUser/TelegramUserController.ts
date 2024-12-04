@@ -12,14 +12,33 @@ export class TelegramUserController {
     private readonly telegramUserService: TelegramUserService;
 
     @Post("/create-telegram-user")
+    @Summary('Create a new Telegram user')
+    @Returns(201, { description: 'User created successfully' })
+    @Returns(400, { description: 'Invalid request body' })
     async createTelegramUser(
-        @QueryParams("telegramId")   telegramId: number,
-        @QueryParams("gender") gender: string,
-        @QueryParams("username") username: string,
-        @QueryParams("age") age: number
-    ): Promise<boolean> {
-        return this.telegramUserService.createTelegramUser(telegramId,gender,username,age);
+    @BodyParams() body: CreateTelegramUserDto,
+    @Res() res: Res
+  ): Promise<void> {
+    try {
+      console.log(body);
+      const { telegramId, gender, username, age } = body;
+      console.log(telegramId, gender, username, age);
+      const result = await this.telegramUserService.createTelegramUser(telegramId, gender, username, age);
+      console.log(result);
+      if (result) {
+        res.status(201).send({ message: 'User created successfully' });
+      } else {
+        res.status(400).send({ message: 'User creation failed' });
+      }
+    } catch (error) {
+      res.status(500).send({ message: 'Internal server error', error: error.message });
     }
+  }
+
+
+
+
+
 
     @Get("/get-telegram-user")
     async getTelegramUser(@QueryParams("telegramId") telegramId: number): Promise<{ telegramId: number | null; username: string | null; gender: string | null; age: number | null; avatar: string | null } | null> {

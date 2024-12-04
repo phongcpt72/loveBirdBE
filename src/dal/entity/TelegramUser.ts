@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
-import { Property } from "@tsed/schema";
+import { Property, Required } from "@tsed/schema";
+
 
 @Entity("telegram_users")
 export class TelegramUser {
@@ -8,6 +9,7 @@ export class TelegramUser {
 
   @Column({ nullable: true })
   @Property()
+  @Required()
   userName: string;
 
   @Column({ nullable: true })
