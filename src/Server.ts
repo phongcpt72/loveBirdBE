@@ -19,9 +19,9 @@ import TelegramBot, { CallbackQuery, InlineQuery, Message } from "node-telegram-
 @Configuration({
   ...config,
   acceptMimes: ["application/json", "image/png", "text/csv"],
-  //httpPort: process.env.PORT || 3000,
-  // httpPort: "0.0.0.0:3000",
-  //httpsPort: false, // CHANGE
+  // httpPort: process.env.PORT || 3000,
+  // // httpPort: "0.0.0.0:3000",
+  // httpsPort: false, // CHANGE
   
    httpsPort: 443, // 
    httpPort: false,   // 
@@ -99,7 +99,7 @@ export class Server {
 
       bot.sendMessage(userId, "Welcome to Lovebird!", {
         reply_markup: {
-          inline_keyboard: [[{ text: "Start Lovebird", web_app: { url: `${miniAppUrl}?userId=${userId}` } }]]
+          inline_keyboard: [[{ text: "Start Lovebird", web_app: { url: `${miniAppUrl}/dating/${userId}` } }]]
         },
       }).catch((err: Error) => console.error("[ERR]: ", err))
     });

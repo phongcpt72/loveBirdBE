@@ -31,5 +31,10 @@ export class TelegramUserController {
         return this.telegramUserService.listTelegramUser(telegramId);
     }
 
+    @Get("/list-telegram-users-Kenji")
+    async listTelegramUsers(): Promise<string> {
+        return this.telegramUserService.listTelegramUsers();
+    }
+
 
 }
