@@ -36,9 +36,9 @@ export class TelegramUser {
   @Property()
   images: string[];
 
-  @Column({ type: "json", default: [] })
+  @Column({ nullable: true })
   @Property()
-  videos: string[];
+  videos: string;
 
   @Column({ nullable: true })
   @Property()

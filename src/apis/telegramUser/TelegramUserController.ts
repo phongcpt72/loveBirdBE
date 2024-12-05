@@ -4,6 +4,7 @@ import { Get, Post, Returns, Summary, Description } from "@tsed/schema";
 import { BodyParams, PathParams, QueryParams } from "@tsed/platform-params";
 import { CreateTelegramUserDto } from "./dto/CreateTelegramUserDto";
 import { TelegramUserService } from "./services/telegramUserSevice";
+import { GetUserList } from "./dto/GetUserList";
 
 @Controller("/telegramusers")
 export class TelegramUserController {
@@ -38,9 +39,15 @@ export class TelegramUserController {
         return await this.telegramUserService.getTelegramUser(telegramId);  
     }
 
-    @Get("/list-telegram-user")
-    async listTelegramUser(@QueryParams("telegramId") telegramId: number): Promise<string> {
-        return this.telegramUserService.listTelegramUser(telegramId);
+
+    @Get("/get-user-list")
+    @Summary("Get a list of users of the opposite gender")
+    @Returns(200, GetUserList)
+    async getUserList(@QueryParams("telegramId") telegramId: number): Promise<GetUserList[]> {
+        return this.telegramUserService.getUserList(telegramId);
     }
+
+
+
 
 }

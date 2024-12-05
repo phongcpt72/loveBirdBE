@@ -4,6 +4,7 @@ import { In ,Not , IsNull} from "typeorm";
 import { CreateTelegramUserDto } from "../dto/CreateTelegramUserDto";
 import { TelegramUser, TelegramUserRepository } from "../../../dal";
 import { BigNumber, ethers, FixedNumber, Contract , Wallet, providers, utils} from "ethers";
+import { GetUserList } from "../dto/GetUserList";
 
 @Injectable()
 export class TelegramUserService {
@@ -72,30 +73,32 @@ export class TelegramUserService {
         }
     }
 
-    async listTelegramUser(telegramId: number): Promise<string> {
+    async getUserList(telegramId: number): Promise<GetUserList[]> {
         try {
-            // Find the user with the given telegramId
             const currentUser = await this.telegramUserRepository.findOne({ where: { telegramId } });
-
             if (!currentUser) {
                 console.error("User not found with the given telegramId");
-                return JSON.stringify([]);
+                return [];
             }
-
-            // Determine the opposite gender
             const oppositeGender = currentUser.gender === 'F' ? 'M' : 'F';
-
-            // Fetch users of the opposite gender, selecting only specific columns
             const users = await this.telegramUserRepository.find({
-                select: ["userName", "gender", "age"],
+                select: ["telegramId", "userName", "gender", "age", "avatar", "videos"],
                 where: { gender: oppositeGender }
             });
-            console.log(users);
-            // Convert the result to JSON
-            return JSON.stringify(users);
+            const userList: GetUserList[] = users.map(user => ({
+                telegramId: user.telegramId,
+                username: user.userName, 
+                gender: user.gender,
+                age: user.age,
+                avatar: user.avatar,
+                videos: user.videos
+            }));
+
+            console.log(userList);
+            return userList;
         } catch (error) {
-            console.error("Error listing Telegram users:", error);
-            return JSON.stringify([]);
+            console.error("Error retrieving Telegram user information:", error);
+            return [];
         }
     }
 
