@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@tsed/di";
 import { BigNumber, ethers, FixedNumber, Contract , Wallet, providers, utils} from "ethers";
-import SHARES_ABI from "../../../services/abis/shares.json";
+import SHARES_ABI from "../../../services/abis/Shares.json";
 import {TelegramUserRepository} from "../../../dal"
 require('dotenv').config();
 
