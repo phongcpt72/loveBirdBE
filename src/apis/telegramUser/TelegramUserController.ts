@@ -14,8 +14,8 @@ export class TelegramUserController {
 
     @Post("/create-telegram-user")
     @Summary('Create a new Telegram user')
-    @Returns(201, String).Description("User created successfully")
-    @Returns(400, String).Description("Invalid request body")
+    @Returns(201, String)
+    @Returns(400, String)
     async createTelegramUser(
     @BodyParams() body: CreateTelegramUserDto,
     @Res() res: Res
@@ -44,7 +44,7 @@ export class TelegramUserController {
     @Summary("Get a list of users of the opposite gender")
     @Returns(200, GetUserList)
     async getUserList(@QueryParams("telegramId") telegramId: number): Promise<GetUserList[]> {
-        return this.telegramUserService.getUserList(telegramId);
+        return await this.telegramUserService.getUserList(telegramId);
     }
 
 
