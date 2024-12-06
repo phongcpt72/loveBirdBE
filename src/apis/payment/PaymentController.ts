@@ -43,4 +43,25 @@ export class PaymentController {
         return await this.paymentService.checkTransactionStatus(txHash);
     }
 
+    @Post("/accept-offer")
+    @Summary("Accept offer")
+    @Returns(201, String)
+    @Returns(400, String)
+    async acceptOffer(
+        @BodyParams("telegramIdMale") telegramIdMale: number,
+        @BodyParams("telegramIdFemale") telegramIdFemale: number,
+        @Res() res: Res
+    ): Promise<void> {
+        try {
+            const result = await this.paymentService.acceptOffer(telegramIdMale, telegramIdFemale);
+            if (result) {
+                res.status(201).send({ message: 'Offer accepted' });
+            } else {
+                res.status(400).send({ message: 'Offer not accepted' });
+            }
+        }
+        catch (error) {
+            res.status(500).send({ message: 'Internal server error', error: error.message });
+        }
+    }
 }

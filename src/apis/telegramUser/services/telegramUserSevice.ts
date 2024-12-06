@@ -46,16 +46,10 @@ export class TelegramUserService {
     }
 
     async getUserNameAndAvatar(telegramIds: number[]): Promise<Array<{ userName: string | null, avatar: string | null }>> {
-        
-        
-        
         const users = await this.telegramUserRepository.find({
             select: ["telegramId","userName", "avatar"],
             where: { telegramId: In(telegramIds) }
         });
-
-        console.log(users)
-
         return telegramIds.map(id => {
             const user = users.find(u => u.telegramId === id);
             return {

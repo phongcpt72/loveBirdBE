@@ -149,5 +149,33 @@ export class PaymentService {
     }
 
 
+    async acceptOffer(telegramIdMale: number, telegramIdFemale: number): Promise<boolean> {
+        try {
+            if (telegramIdMale === undefined && telegramIdFemale === undefined) {
+                return false;
+            }
+            const messageList = await this.messageListRepository.findOne({
+                select: ["id", "telegramIdFemale", "status", "isPending"],
+                where: { 
+                    telegramIdMen: telegramIdMale,
+                    telegramIdFemale: telegramIdFemale,
+                    isPending: true
+                }
+            });
+
+            if (messageList) {
+                messageList.status = "Accepted";
+                messageList.isPending = false;
+                await this.messageListRepository.save(messageList);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error accepting offer:', error);
+            return false;
+        }
+    }
+
+
 
 }
