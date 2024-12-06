@@ -11,13 +11,13 @@ export class MessageListController {
     private readonly messageListService: MessageListService;
 
 
-    @Get("/get-messages-list")
-    async getMessagesList(@QueryParams("telegramId") telegramId: number): Promise<{telegramIdMale: number | null;
-        telegramIdFemale: number | null;
-        username: string | null;
-        avatarFemale: string | null;
-        status: string | null;
-        isPending: boolean}| null> {
-        return await this.messageListService.getMessagesList(telegramId);
-    }
+    // @Get("/get-messages-list")
+    // async getMessagesList(@QueryParams("telegramId") telegramId: number): Promise<{telegramIdMale: number | null;
+    //     telegramIdFemale: number | null;
+    //     username: string | null;
+    //     avatarFemale: string | null;
+    //     status: string | null;
+    //     isPending: boolean}| null> {
+    //     return await this.messageListService.getMessagesList(telegramId);
+    // }
 }

@@ -125,9 +125,9 @@ export class PaymentService {
                     messageList.isPending = true;
                     await this.messageListRepository.save(messageList);
                     return true;
-                }
-                return false;
+                }  
             }
+            return false;
             
         } catch (error) {
             console.error('Error buying share:', error);

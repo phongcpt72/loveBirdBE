@@ -6,11 +6,11 @@ export class GetMessagesList {
     @Property()
     telegramIdFemale!: string;
     @Property()
-    gender!: string;
+    username!: string;
     @Property()
-    age!: number;
+    avatarFemale!: string;
     @Property()
-    avatar!: string;
+    status!: string;
     @Property()
-    videos!: string;
+    isPending!: boolean;
 }
