@@ -122,6 +122,7 @@ export class PaymentService {
                     messageList.telegramIdFemale = telegramIdFemale;
                     messageList.txHash = result.txHash;
                     messageList.status = "Pending"
+                    messageList.isPending = true;
                     await this.messageListRepository.save(messageList);
                 }
             }

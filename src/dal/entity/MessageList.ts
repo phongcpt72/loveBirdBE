@@ -23,6 +23,10 @@ export class MessageList {
   @Property()
   status: string;
 
+  @Column({ nullable: true })
+  @Property()
+  isPending: boolean;
+
   @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
   public created_at: Date;
 
