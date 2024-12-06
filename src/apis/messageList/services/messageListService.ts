@@ -13,27 +13,33 @@ export class MessageListService {
     @Inject(MessageListRepository)
     private readonly messageListRepository: MessageListRepository;
 
-    // async getMessagesList(telegramId: number): Promise<GetMessagesList[]> {
-    //     try {
-    //         if (telegramId === undefined) {
-    //             return[];
-    //         }
-    //         const users = await this.messageListRepository.find({
-    //             select: ["telegramIdFemale","status","isPending"],
-    //             where: { telegramIdMen: telegramId }
-    //         });
+    async getMessagesList(telegramId: number): Promise<GetMessagesList[]> {
+        try {
+            if (telegramId === undefined) {
+                return[];
+            }
+            const users = await this.messageListRepository.find({
+                select: ["telegramIdFemale","status","isPending"],
+                where: { telegramIdMen: telegramId }
+            });
 
-    //         console.log(users)
-    //         //const {userName,avatar} = await this.telegramUserService.getUserNameAndAvatar(users);
-
-    //         const userMessagesList: GetMessagesList[] = [];
+            const result = await this.telegramUserService.getUserNameAndAvatar(users.map(user => user.telegramIdFemale));
             
-    //         return [];
-    //     } catch (error) {
-    //         console.error("Error retrieving Telegram user information:", error);
-    //         return [];
-    //     }
-    // }
+            // Combine users and result arrays
+            const userMessagesList: GetMessagesList[] = users.map((user, index) => ({
+                telegramIdMale: telegramId,
+                telegramIdFemale: user.telegramIdFemale.toString(),
+                username: result[index]?.userName || '',
+                avatarFemale: result[index]?.avatar || '',
+                status: user.status,
+                isPending: user.isPending
+            }));
+            return userMessagesList;
+        } catch (error) {
+            console.error("Error retrieving Telegram user information:", error);
+            return [];
+        }
+    }
 
 }
 

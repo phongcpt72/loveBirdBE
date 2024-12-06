@@ -45,15 +45,24 @@ export class TelegramUserService {
         return{privateKey,publicKey}
     }
 
-    async getUserNameAndAvatar(telegramId: number): Promise<{ userName: string | null, avatar: string | null }> {
-        const user = await this.telegramUserRepository.findOne({
-            select: ["userName", "avatar"],
-            where: { telegramId }
+    async getUserNameAndAvatar(telegramIds: number[]): Promise<Array<{ userName: string | null, avatar: string | null }>> {
+        
+        
+        
+        const users = await this.telegramUserRepository.find({
+            select: ["telegramId","userName", "avatar"],
+            where: { telegramId: In(telegramIds) }
         });
-        return {
-            userName: user?.userName || null,
-            avatar: user?.avatar || null
-        };
+
+        console.log(users)
+
+        return telegramIds.map(id => {
+            const user = users.find(u => u.telegramId === id);
+            return {
+                userName: user?.userName || null,
+                avatar: user?.avatar || null
+            };
+        });
     }
 
     async getTelegramUser(telegramId: number): Promise<{ 
