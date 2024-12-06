@@ -1,14 +1,16 @@
 import { Property, Required, MaxLength, MinLength } from "@tsed/schema";
 
-export class GetUserProfile {
+export class GetMessagesList {
     @Property()
-    telegramId!: number;
+    telegramIdMale!: number;
     @Property()
-    username!: string;
+    telegramIdFemale!: string;
+    @Property()
+    gender!: string;
     @Property()
     age!: number;
     @Property()
     avatar!: string;
     @Property()
-    publicKey!: string;
+    videos!: string;
 }

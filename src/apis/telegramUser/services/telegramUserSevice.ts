@@ -1,11 +1,10 @@
 import { Inject, Injectable } from "@tsed/di";
 import { In ,Not , IsNull} from "typeorm";
-// import { Product, ProductRepository, User, UserRepository, HistoryRepository } from "../../../dal";
 import { CreateTelegramUserDto } from "../dto/CreateTelegramUserDto";
 import { TelegramUser, TelegramUserRepository } from "../../../dal";
 import { BigNumber, ethers, FixedNumber, Contract , Wallet, providers, utils} from "ethers";
 import { GetUserList } from "../dto/GetUserList";
-import { GetUserProfile } from "../dto/GetUserProfile";
+
 
 @Injectable()
 export class TelegramUserService {
@@ -51,26 +50,27 @@ export class TelegramUserService {
         username: string | null; 
         gender: string | null; 
         age: number | null; 
-        avatar: string | null 
+        avatar: string | null;
+        publicKey: string | null;
     } | null> {
         try {
             if (telegramId === undefined) {
-                return { telegramId: null, username: null, gender: null, age: null, avatar: null };
+                return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null };
             }
             const user = await this.telegramUserRepository.findOne({
-                select: ["userName", "gender", "age", "avatar"],
+                select: ["userName", "gender", "age", "avatar","publicKey"],
                 where: { telegramId }
             });
 
             if (user) {
-                const { userName: username, gender, age, avatar } = user;
-                return { telegramId, username, gender, age, avatar };
+                const { userName: username, gender, age, avatar, publicKey } = user;
+                return { telegramId, username, gender, age, avatar, publicKey };
             }
-            // Return an object with null values if the user is not found
-            return { telegramId: null, username: null, gender: null, age: null, avatar: null };
+            
+            return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null };
         } catch (error) {
             console.error("Error retrieving Telegram user information:", error);
-            return { telegramId: null, username: null, gender: null, age: null, avatar: null };
+            return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null };
         }
     }
 
@@ -102,29 +102,5 @@ export class TelegramUserService {
             return [];
         }
     }
-
-    async getUserProfile(telegramId: number): Promise<GetUserProfile> {
-        try {
-            const user = await this.telegramUserRepository.findOne({
-                select: ["telegramId", "userName", "age", "avatar", "publicKey"],
-                where: { telegramId }
-            });
-            if (!user) {
-                throw new Error("User not found");
-            }
-            return {
-                telegramId: user.telegramId,
-                username: user.userName,
-                age: user.age,
-                avatar: user.avatar,
-                publicKey: user.publicKey
-            };
-        } catch (error) {
-            console.error("Error retrieving Telegram user information:", error);
-            throw error;
-        }
-    }
-
-
 
 }
