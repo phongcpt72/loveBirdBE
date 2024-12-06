@@ -5,6 +5,7 @@ import { BodyParams, PathParams, QueryParams } from "@tsed/platform-params";
 import { CreateTelegramUserDto } from "./dto/CreateTelegramUserDto";
 import { TelegramUserService } from "./services/telegramUserSevice";
 import { GetUserList } from "./dto/GetUserList";
+import { GetUserProfile } from "./dto/GetUserProfile";
 
 @Controller("/telegramusers")
 export class TelegramUserController {
@@ -47,7 +48,12 @@ export class TelegramUserController {
         return await this.telegramUserService.getUserList(telegramId);
     }
 
-
+    @Get("/get-user-profile")
+    @Summary("Get a user profile")
+    @Returns(200, GetUserProfile)
+    async getUserProfile(@QueryParams("telegramId") telegramId: number): Promise<GetUserProfile> {
+        return await this.telegramUserService.getUserProfile(telegramId);
+    }
 
 
 }

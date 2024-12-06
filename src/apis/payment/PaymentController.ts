@@ -34,4 +34,13 @@ export class PaymentController {
         }
     }
 
+    @Get("/check-transaction-status/:txHash")
+    @Summary("Check transaction status")
+    @Returns(200, String)
+    async checkTransactionStatus(
+        @PathParams("txHash") txHash: string
+    ): Promise<string> {
+        return await this.paymentService.checkTransactionStatus(txHash);
+    }
+
 }

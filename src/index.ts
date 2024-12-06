@@ -6,7 +6,9 @@ import { Server } from "./Server";
 import {
   LoveBirdDataSource,
   TelegramUserRepository,
-  TelegramUser
+  TelegramUser,
+  MessageListRepository,
+  MessageList
 } from "./dal";
 
 registerProvider({
@@ -29,6 +31,11 @@ registerProvider({
 registerProvider({
   provide: TelegramUserRepository,
   useValue: new TelegramUserRepository(TelegramUser, LoveBirdDataSource.createEntityManager()),
+});
+
+registerProvider({
+  provide: MessageListRepository,
+  useValue: new MessageListRepository(MessageList, LoveBirdDataSource.createEntityManager()),
 });
 
 async function bootstrap() {

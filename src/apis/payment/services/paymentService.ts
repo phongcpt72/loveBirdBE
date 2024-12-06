@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@tsed/di";
 import { BigNumber, ethers, FixedNumber, Contract , Wallet, providers, utils} from "ethers";
 import SHARES_ABI from "../../../services/abis/Shares.json";
-import {TelegramUserRepository} from "../../../dal"
+import {TelegramUserRepository, MessageListRepository, MessageList } from "../../../dal"
 require('dotenv').config();
 
 const provider = new providers.JsonRpcProvider(process.env.RPC_PROVIDER || '');
@@ -13,6 +13,8 @@ export class PaymentService {
     @Inject(TelegramUserRepository)
     private readonly telegramUserRepository: TelegramUserRepository;
 
+    @Inject(MessageListRepository)
+    private readonly messageListRepository: MessageListRepository;
 
     async getPrice(supply: number, amount: number): Promise<number> {
         try {
@@ -57,7 +59,7 @@ export class PaymentService {
         return finalPrice;
     }
 
-    async implementBuyShare(sharesSubject: string, amount: number, privateKeyBuyer: string) {
+    async implementBuyShare(sharesSubject: string, amount: number, privateKeyBuyer: string): Promise<{txHash: string; status: string }> {
         let totalAmount = 0;
         const ethers = require('ethers');
         const sharesAmount = await productContract.sharesSupply(sharesSubject);
@@ -75,7 +77,6 @@ export class PaymentService {
             {
                 const gasPrice = await provider.getGasPrice();
                 const nonce = await provider.getTransactionCount(wallet.address);
-                
                 const tx = await buyContract.buyShares(
                     sharesSubject,
                     amount,
@@ -87,19 +88,19 @@ export class PaymentService {
                     }
                 );
                 const txHash = tx.hash;
-                console.log(txHash);
+                const status = await this.checkTransactionStatus(txHash);
+                return {txHash,status};
             }
-
+            return {txHash: '',status: 'insufficient_balance'};
         } catch (error) {
             console.error('Error buying share:', error);
             throw error;
         }
-        return totalAmount;
     }
 
     async buyShare(telegramIdBuyer: number, telegramIdFemale: number, amount: number): Promise<boolean> {
         try {
-            if (telegramIdBuyer === undefined || telegramIdFemale === undefined) {
+            if (telegramIdBuyer === undefined && telegramIdFemale === undefined) {
                 return false;
             }
             const buyer = await this.telegramUserRepository.findOne({
@@ -114,12 +115,33 @@ export class PaymentService {
 
 
             if(buyer && female){
-                await this.implementBuyShare(female.publicKey, amount, buyer.privateKey);
+                const result = await this.implementBuyShare(female.publicKey, amount, buyer.privateKey);
+                if(result.status == 'success'){
+                    const messageList = new MessageList();
+                    messageList.telegramIdMen = telegramIdBuyer;
+                    messageList.telegramIdFemale = telegramIdFemale;
+                    messageList.txHash = result.txHash;
+                    messageList.status = "Pending"
+                    await this.messageListRepository.save(messageList);
+                }
             }
             return true;
         } catch (error) {
             console.error('Error buying share:', error);
             return false;
+        }
+    }
+
+    async checkTransactionStatus(txHash: string): Promise<string> {
+        try {
+            const receipt = await provider.getTransactionReceipt(txHash);
+            if (!receipt) {
+                return 'pending';
+            }
+            return receipt.status === 1 ? 'success' : 'failed';
+        } catch (error) {
+            console.error('Error checking transaction status:', error);
+            throw error;
         }
     }
 

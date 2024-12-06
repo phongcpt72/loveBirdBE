@@ -5,6 +5,7 @@ import { CreateTelegramUserDto } from "../dto/CreateTelegramUserDto";
 import { TelegramUser, TelegramUserRepository } from "../../../dal";
 import { BigNumber, ethers, FixedNumber, Contract , Wallet, providers, utils} from "ethers";
 import { GetUserList } from "../dto/GetUserList";
+import { GetUserProfile } from "../dto/GetUserProfile";
 
 @Injectable()
 export class TelegramUserService {
@@ -101,5 +102,29 @@ export class TelegramUserService {
             return [];
         }
     }
+
+    async getUserProfile(telegramId: number): Promise<GetUserProfile> {
+        try {
+            const user = await this.telegramUserRepository.findOne({
+                select: ["telegramId", "userName", "age", "avatar", "publicKey"],
+                where: { telegramId }
+            });
+            if (!user) {
+                throw new Error("User not found");
+            }
+            return {
+                telegramId: user.telegramId,
+                username: user.userName,
+                age: user.age,
+                avatar: user.avatar,
+                publicKey: user.publicKey
+            };
+        } catch (error) {
+            console.error("Error retrieving Telegram user information:", error);
+            throw error;
+        }
+    }
+
+
 
 }
