@@ -62,7 +62,7 @@ export class PaymentService {
 
     async getBalance(publicKey: string): Promise<number> {
         const balance = await provider.getBalance(publicKey);
-        return Number(balance)/1e18;
+        return Number((Number(balance)/1e18).toFixed(6));
     }
 
     async implementBuyShare(sharesSubject: string, amount: number, privateKeyBuyer: string): Promise<{txHash: string; status: string }> {
