@@ -20,7 +20,8 @@ export class MessageListService {
             }
             const users = await this.messageListRepository.find({
                 select: ["telegramIdFemale","status","isPending"],
-                where: { telegramIdMen: telegramId }
+                where: { telegramIdMen: telegramId },
+                order: { created_at: "DESC" }
             });
 
             const result = await this.telegramUserService.getUserNameAndAvatar(users.map(user => user.telegramIdFemale));
@@ -40,7 +41,6 @@ export class MessageListService {
             return [];
         }
     }
-
 }
 
 

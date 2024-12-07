@@ -64,4 +64,15 @@ export class PaymentController {
             res.status(500).send({ message: 'Internal server error', error: error.message });
         }
     }
+
+
+    @Post("/send-message")
+    @Summary("Send message")
+    @Returns(201, String)
+    async sendMessage(
+        @BodyParams("telegramIdFemale") telegramIdFemale: number,
+        @BodyParams("telegramIdMale") telegramIdMale: number,
+    ): Promise<boolean> {
+        return await this.paymentService.sendMessage(telegramIdFemale, telegramIdMale);
+    }
 }

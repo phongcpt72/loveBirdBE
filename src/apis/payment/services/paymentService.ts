@@ -2,6 +2,7 @@ import { Inject, Injectable } from "@tsed/di";
 import { BigNumber, ethers, FixedNumber, Contract , Wallet, providers, utils} from "ethers";
 import SHARES_ABI from "../../../services/abis/Shares.json";
 import {TelegramUserRepository, MessageListRepository, MessageList } from "../../../dal"
+import axios from 'axios';
 require('dotenv').config();
 
 const provider = new providers.JsonRpcProvider(process.env.RPC_PROVIDER || '');
@@ -57,6 +58,11 @@ export class PaymentService {
     async buyShareFirst(sharesSubject: string,sharesAmount:number, amount: number): Promise<number> {
         const finalPrice = await this.getBuyPriceInformation(sharesSubject,sharesAmount , amount);
         return finalPrice;
+    }
+
+    async getBalance(publicKey: string): Promise<number> {
+        const balance = await provider.getBalance(publicKey);
+        return Number(balance)/1e18;
     }
 
     async implementBuyShare(sharesSubject: string, amount: number, privateKeyBuyer: string): Promise<{txHash: string; status: string }> {
@@ -148,14 +154,40 @@ export class PaymentService {
         }
     }
 
+    async checkUser(telegramId: number): Promise<boolean> {
+        try {
+            const user = await this.telegramUserRepository.findOne({
+                where: { telegramId: telegramId }
+            });
+            return user !== null;
+        } catch (error) {
+            console.error('Error checking user:', error);
+            return false;
+        }
+    }
 
     async acceptOffer(telegramIdMale: number, telegramIdFemale: number): Promise<boolean> {
         try {
-            if (telegramIdMale === undefined && telegramIdFemale === undefined) {
+            // Improve validation to check for actual numbers
+            if (!telegramIdMale || !telegramIdFemale || 
+                !Number.isInteger(telegramIdMale) || !Number.isInteger(telegramIdFemale)) {
+                console.log('Invalid telegram IDs provided:', { telegramIdMale, telegramIdFemale });
                 return false;
             }
+
+            // Check if both users exist
+            const [maleExists, femaleExists] = await Promise.all([
+                this.checkUser(telegramIdMale),
+                this.checkUser(telegramIdFemale)
+            ]);
+
+            if (!maleExists || !femaleExists) {
+                console.log('One or both users do not exist:', { maleExists, femaleExists });
+                return false;
+            }
+
+            // Find pending message with better error logging
             const messageList = await this.messageListRepository.findOne({
-                select: ["id", "telegramIdFemale", "status", "isPending"],
                 where: { 
                     telegramIdMen: telegramIdMale,
                     telegramIdFemale: telegramIdFemale,
@@ -163,19 +195,74 @@ export class PaymentService {
                 }
             });
 
-            if (messageList) {
-                messageList.status = "Accepted";
-                messageList.isPending = false;
-                await this.messageListRepository.save(messageList);
-                return true;
+            if (!messageList) {
+                console.log('No pending offer found for users:', { telegramIdMale, telegramIdFemale });
+                return false;
             }
-            return false;
+
+            // Update message status
+            messageList.status = "Accepted";
+            messageList.isPending = false;
+            await this.messageListRepository.save(messageList);
+            await this.sendMessage(telegramIdMale, telegramIdFemale);
+            return true;
+
         } catch (error) {
             console.error('Error accepting offer:', error);
             return false;
         }
     }
 
+    async sendMessage(telegramIdFemale: number, telegramIdMale: number): Promise<boolean> {
+        try{
+            const [userFemale, userMale] = await Promise.all([
+                this.telegramUserRepository.findOne({
+                    select: ["userName"],
+                    where: { telegramId: telegramIdFemale }
+                }),
+                this.telegramUserRepository.findOne({
+                    select: ["userName"],
+                    where: { telegramId: telegramIdMale }
+                })
+            ]);
+            const groupLink = "https://t.me/+BB95K6InL600Njc1"
+            const dateTime = '12pm'
+            const location = 'Cross Restaurant'
 
+            const messageForFemale = encodeURIComponent(`You havea Lovebird date with ${userMale?.userName} @ ${dateTime} ${location} ${groupLink}`);
+            const messageForMale = encodeURIComponent(`You have a Lovebird date with ${userFemale?.userName} @ ${dateTime} ${location} ${groupLink}`);
+
+            const urlForFemale = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${telegramIdFemale}&text=${messageForFemale}`;
+            const urlForMale = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${telegramIdMale}&text=${messageForMale}`;
+
+            try {
+                const [femaleResponse, maleResponse] = await Promise.all([
+                    axios.get(urlForFemale),
+                    axios.get(urlForMale)
+                ]);
+                
+                // Check if the requests were successful
+                if (femaleResponse.status === 200 && maleResponse.status === 200) {
+                    return true;
+                }
+
+                console.error('Failed to send messages:', {
+                    femaleStatus: femaleResponse.status,
+                    maleStatus: maleResponse.status
+                });
+
+                return false;
+            } catch (requestError) {
+                console.error('Failed to send Telegram messages:', requestError);
+                return false;
+            }
+        }
+        catch(error){
+            console.error('Error sending message:', error);
+            return false;
+        }
+
+
+    }
 
 }

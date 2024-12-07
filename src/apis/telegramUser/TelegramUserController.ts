@@ -36,7 +36,7 @@ export class TelegramUserController {
   }
 
     @Get("/get-telegram-user")
-    async getTelegramUser(@QueryParams("telegramId") telegramId: number): Promise<{ telegramId: number | null; username: string | null; gender: string | null; age: number | null; avatar: string | null; publicKey: string | null } | null> {
+    async getTelegramUser(@QueryParams("telegramId") telegramId: number): Promise<{ telegramId: number | null; username: string | null; gender: string | null; age: number | null; avatar: string | null; publicKey: string | null; balance: string | null } | null> {
         return await this.telegramUserService.getTelegramUser(telegramId);  
     }
 

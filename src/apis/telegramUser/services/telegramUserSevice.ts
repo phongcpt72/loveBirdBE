@@ -1,10 +1,10 @@
 import { Inject, Injectable } from "@tsed/di";
 import { In ,Not , IsNull} from "typeorm";
 import { CreateTelegramUserDto } from "../dto/CreateTelegramUserDto";
-import { TelegramUser, TelegramUserRepository } from "../../../dal";
+import { MessageListRepository, TelegramUser, TelegramUserRepository } from "../../../dal";
 import { BigNumber, ethers, FixedNumber, Contract , Wallet, providers, utils} from "ethers";
 import { GetUserList } from "../dto/GetUserList";
-
+import { PaymentService } from "../../payment/services/paymentService";
 
 @Injectable()
 export class TelegramUserService {
@@ -12,6 +12,12 @@ export class TelegramUserService {
 
     @Inject(TelegramUserRepository)
     private readonly telegramUserRepository: TelegramUserRepository;
+
+    @Inject(MessageListRepository)
+    private readonly messageListRepository: MessageListRepository;
+
+    @Inject(PaymentService)
+    private readonly paymentService: PaymentService;
 
     async createTelegramUser(telegramId: number, gender: string, username: string, age: number): Promise<boolean> {   
         const entity = new TelegramUser();
@@ -66,10 +72,11 @@ export class TelegramUserService {
         age: number | null; 
         avatar: string | null;
         publicKey: string | null;
+        balance: string | null;
     } | null> {
         try {
             if (telegramId === undefined) {
-                return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null };
+                return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null, balance: null };
             }
             const user = await this.telegramUserRepository.findOne({
                 select: ["userName", "gender", "age", "avatar","publicKey"],
@@ -78,15 +85,32 @@ export class TelegramUserService {
 
             if (user) {
                 const { userName: username, gender, age, avatar, publicKey } = user;
-                return { telegramId, username, gender, age, avatar, publicKey };
+                const balance = await this.paymentService.getBalance(publicKey);
+                console.log(user);
+                console.log(balance);
+                return { telegramId, username, gender, age, avatar, publicKey, balance: balance.toString() };
             }
             
-            return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null };
+            return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null, balance: null };
         } catch (error) {
             console.error("Error retrieving Telegram user information:", error);
-            return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null };
+            return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null, balance: null };
         }
     }
+
+    async filterUserList(telegramId: number, gender: string): Promise<{ telegramIdFilter: number[] }> {
+        const users = await this.messageListRepository.find({
+            select: [gender === 'F' ? "telegramIdMen" : "telegramIdFemale"],
+            where: {
+                [gender === 'F' ? "telegramIdFemale" : "telegramIdMen"]: telegramId
+            }
+        });
+        const telegramIds = users.map(user => 
+            gender === 'F' ? user.telegramIdMen : user.telegramIdFemale
+        );
+        return { telegramIdFilter: telegramIds };
+    }
+
 
     async getUserList(telegramId: number): Promise<GetUserList[]> {
         try {
@@ -96,10 +120,20 @@ export class TelegramUserService {
                 return [];
             }
             const oppositeGender = currentUser.gender === 'F' ? 'M' : 'F';
+            const { telegramIdFilter } = await this.filterUserList(telegramId, currentUser.gender);
+
             const users = await this.telegramUserRepository.find({
                 select: ["telegramId", "userName", "gender", "age", "avatar", "videos"],
-                where: { gender: oppositeGender }
+                where: {
+                    gender: oppositeGender,
+                    telegramId: telegramIdFilter.length > 0 
+                        ? currentUser.gender === 'M' 
+                            ? Not(In(telegramIdFilter)) 
+                            : In(telegramIdFilter)
+                        : undefined
+                }
             });
+
             const userList: GetUserList[] = users.map(user => ({
                 telegramId: user.telegramId,
                 username: user.userName, 
@@ -108,8 +142,6 @@ export class TelegramUserService {
                 avatar: user.avatar,
                 videos: user.videos
             }));
-
-            console.log(userList);
             return userList;
         } catch (error) {
             console.error("Error retrieving Telegram user information:", error);
