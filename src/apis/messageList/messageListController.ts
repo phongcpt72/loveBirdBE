@@ -19,26 +19,26 @@ export class MessageListController {
         return await this.messageListService.getMessagesList(telegramId);
     }
 
-    @Post("/create-group-chat-link")
-    @Summary("Create group chat links")
-    @Description("Creates group chat links from an array of link strings")
-    @Returns(200, Boolean)
-    async createGroupChatLink(
-        @BodyParams("linkArray") linkArray: string[]
-    ): Promise<boolean> {
-        if (!Array.isArray(linkArray) || linkArray.length === 0) {
-            throw new Error("Invalid input: linkArray must be a non-empty array of strings");
-        }
-        return await this.groupChatService.createGroupChatLink(linkArray);
-    }
+    // @Post("/create-group-chat-link")
+    // @Summary("Create group chat links")
+    // @Description("Creates group chat links from an array of link strings")
+    // @Returns(200, Boolean)
+    // async createGroupChatLink(
+    //     @BodyParams("linkArray") linkArray: string[]
+    // ): Promise<boolean> {
+    //     if (!Array.isArray(linkArray) || linkArray.length === 0) {
+    //         throw new Error("Invalid input: linkArray must be a non-empty array of strings");
+    //     }
+    //     return await this.groupChatService.createGroupChatLink(linkArray);
+    // }
 
-    @Post("/create-group-invite-link")
-    @Summary("Create group invite links")
-    @Returns(200, String)
-    async createGroupInviteLink(
-        @BodyParams("groupName") groupName: string
-    ): Promise<string | null> {
-        return await this.groupChatService.createGroupInviteLink(groupName);
-    }
+    // @Post("/create-group-invite-link")
+    // @Summary("Create group invite links")
+    // @Returns(200, String)
+    // async createGroupInviteLink(
+    //     @BodyParams("groupName") groupName: string
+    // ): Promise<string | null> {
+    //     return await this.groupChatService.createGroupInviteLink(groupName);
+    // }
 
 }

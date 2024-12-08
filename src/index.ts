@@ -1,6 +1,6 @@
 import { registerProvider } from "@tsed/di";
 import { $log } from "@tsed/common";
-// import { Logger } from "@tsed/logger";
+import { Logger } from "@tsed/logger";
 import { PlatformExpress } from "@tsed/platform-express";
 import { Server } from "./Server";
 import {
@@ -10,18 +10,16 @@ import {
   MessageListRepository,
   MessageList,
   GroupChatLinkRepository,
-  GroupChatLink,
-  DatingInformationRepository,
-  DatingInformation
+  GroupChatLink
 } from "./dal";
 
 registerProvider({
   provide: LoveBirdDataSource,
   type: "typeorm:datasource",
-  // deps: [Logger],
-  async useAsyncFactory() {
+  deps: [Logger],
+  async useAsyncFactory(logger: Logger) {
     await LoveBirdDataSource.initialize();
-    // logger.info("Connected with typeorm to database: PostgreSQL");
+    logger.info("Connected with typeorm to database: PostgreSQL");
     return LoveBirdDataSource;
   },
   hooks: {
@@ -45,11 +43,6 @@ registerProvider({
 registerProvider({
   provide: GroupChatLinkRepository,
   useValue: new GroupChatLinkRepository(GroupChatLink, LoveBirdDataSource.createEntityManager()),
-});
-
-registerProvider({
-  provide: DatingInformationRepository,
-  useValue: new DatingInformationRepository(DatingInformation, LoveBirdDataSource.createEntityManager()),
 });
 
 async function bootstrap() {

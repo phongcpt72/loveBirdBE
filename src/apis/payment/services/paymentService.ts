@@ -228,7 +228,8 @@ export class PaymentService {
                     where: { telegramId: telegramIdMale }
                 })
             ]);
-            const groupLink = await this.groupChatService.getGroupChatLink(txHash);
+            // const groupLink = await this.groupChatService.getGroupChatLink(txHash);
+            const groupLink = 'hash';
             const dateTime = '12pm'
             const location = 'Cross Restaurant'
 
