@@ -29,7 +29,7 @@ export class MessageListService {
             // Combine users and result arrays
             const userMessagesList: GetMessagesList[] = users.map((user, index) => ({
                 telegramIdMale: telegramId,
-                telegramIdFemale: user.telegramIdFemale.toString(),
+                telegramIdFemale: user.telegramIdFemale,
                 username: result[index]?.userName || '',
                 avatarFemale: result[index]?.avatar || '',
                 status: user.status,

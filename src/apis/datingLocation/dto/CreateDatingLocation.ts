@@ -1,16 +1,18 @@
 import { Property, Required, MaxLength, MinLength } from "@tsed/schema";
 
-export class GetMessagesList {
+export class CreateDatingLocation {
     @Property()
     telegramIdMale!: number;
     @Property()
     telegramIdFemale!: number;
     @Property()
-    username!: string;
+    title!: string;
     @Property()
-    avatarFemale!: string;
+    address!: string;
     @Property()
-    status!: string;
+    lat!: string;
     @Property()
-    isPending!: boolean;
+    long!: string;
+    @Property()
+    datingTime!: number;
 }

@@ -2,6 +2,7 @@ import { Inject, Injectable } from "@tsed/di";
 import { BigNumber, ethers, FixedNumber, Contract , Wallet, providers, utils} from "ethers";
 import SHARES_ABI from "../../../services/abis/Shares.json";
 import {TelegramUserRepository, MessageListRepository, MessageList } from "../../../dal"
+import {GroupChatService} from "../../../apis/messageList/services/groupChatService"
 import axios from 'axios';
 require('dotenv').config();
 
@@ -16,6 +17,9 @@ export class PaymentService {
 
     @Inject(MessageListRepository)
     private readonly messageListRepository: MessageListRepository;
+
+    @Inject(GroupChatService)
+    private readonly groupChatService: GroupChatService;
 
     async getPrice(supply: number, amount: number): Promise<number> {
         try {
@@ -204,7 +208,7 @@ export class PaymentService {
             messageList.status = "Accepted";
             messageList.isPending = false;
             await this.messageListRepository.save(messageList);
-            await this.sendMessage(telegramIdMale, telegramIdFemale);
+            await this.sendMessage(telegramIdMale, telegramIdFemale, messageList.txHash);
             return true;
 
         } catch (error) {
@@ -213,7 +217,7 @@ export class PaymentService {
         }
     }
 
-    async sendMessage(telegramIdFemale: number, telegramIdMale: number): Promise<boolean> {
+    async sendMessage(telegramIdFemale: number, telegramIdMale: number, txHash: string): Promise<boolean> {
         try{
             const [userFemale, userMale] = await Promise.all([
                 this.telegramUserRepository.findOne({
@@ -225,11 +229,11 @@ export class PaymentService {
                     where: { telegramId: telegramIdMale }
                 })
             ]);
-            const groupLink = "https://t.me/+BB95K6InL600Njc1"
+            const groupLink = await this.groupChatService.getGroupChatLink(txHash);
             const dateTime = '12pm'
             const location = 'Cross Restaurant'
 
-            const messageForFemale = encodeURIComponent(`You havea Lovebird date with ${userMale?.userName} @ ${dateTime} ${location} ${groupLink}`);
+            const messageForFemale = encodeURIComponent(`You have a Lovebird date with ${userMale?.userName} @ ${dateTime} ${location} ${groupLink}`);
             const messageForMale = encodeURIComponent(`You have a Lovebird date with ${userFemale?.userName} @ ${dateTime} ${location} ${groupLink}`);
 
             const urlForFemale = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${telegramIdFemale}&text=${messageForFemale}`;

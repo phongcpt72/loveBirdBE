@@ -72,7 +72,8 @@ export class PaymentController {
     async sendMessage(
         @BodyParams("telegramIdFemale") telegramIdFemale: number,
         @BodyParams("telegramIdMale") telegramIdMale: number,
+        @BodyParams("txHash") txHash: string
     ): Promise<boolean> {
-        return await this.paymentService.sendMessage(telegramIdFemale, telegramIdMale);
+        return await this.paymentService.sendMessage(telegramIdFemale, telegramIdMale, txHash);
     }
 }
