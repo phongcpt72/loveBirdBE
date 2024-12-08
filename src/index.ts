@@ -10,7 +10,9 @@ import {
   MessageListRepository,
   MessageList,
   GroupChatLinkRepository,
-  GroupChatLink
+  GroupChatLink,
+  DatingInformation,
+  DatingInformationRepository
 } from "./dal";
 
 registerProvider({
@@ -43,6 +45,11 @@ registerProvider({
 registerProvider({
   provide: GroupChatLinkRepository,
   useValue: new GroupChatLinkRepository(GroupChatLink, LoveBirdDataSource.createEntityManager()),
+});
+
+registerProvider({
+  provide: DatingInformationRepository,
+  useValue: new DatingInformationRepository(DatingInformation, LoveBirdDataSource.createEntityManager()),
 });
 
 async function bootstrap() {

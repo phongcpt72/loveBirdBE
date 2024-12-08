@@ -13,18 +13,18 @@ export class DatingInformationService {
    async createDatingLocation(datingInformation: CreateDatingLocation): Promise<boolean> {
     try {
         // Check for existing records with the same telegram IDs
-        const existingRecord = await this.datingInformationRepository.findOne({
-            where: [
-                { telegramIdFemale: datingInformation.telegramIdFemale },
-                { telegramIdMale: datingInformation.telegramIdMale }
-            ]
-        });
-
-        if (existingRecord) {
-            console.error('Telegram ID already exists in the database');
-            return false;
-        }
-
+        // const existingRecord = await this.datingInformationRepository.find({
+        //     where: [
+        //         { telegramIdFemale: datingInformation.telegramIdFemale },
+        //         { telegramIdMale: datingInformation.telegramIdMale }
+        //     ]
+        // });
+        // console.log(existingRecord);
+        // if (existingRecord) {
+        //     console.error('Telegram ID already exists in the database');
+        //     return false;
+        // }
+        console.log(datingInformation);
         const entity = new DatingInformation();
         entity.telegramIdMale = datingInformation.telegramIdMale;
         entity.telegramIdFemale = datingInformation.telegramIdFemale;
