@@ -4,7 +4,7 @@ import SHARES_ABI from "../../../services/abis/Shares.json";
 import {TelegramUserRepository, MessageListRepository, MessageList } from "../../../dal"
 import {GroupChatService} from "../../../apis/messageList/services/groupChatService"
 import axios from 'axios';
-require('dotenv').config();
+import * as dotenv from 'dotenv'
 
 const provider = new providers.JsonRpcProvider(process.env.RPC_PROVIDER || '');
 const productContract = new Contract(process.env.PRODUCT_ADDRESS || '', SHARES_ABI, provider);
@@ -71,7 +71,6 @@ export class PaymentService {
 
     async implementBuyShare(sharesSubject: string, amount: number, privateKeyBuyer: string): Promise<{txHash: string; status: string }> {
         let totalAmount = 0;
-        const ethers = require('ethers');
         const sharesAmount = await productContract.sharesSupply(sharesSubject);
         try {
             if(sharesAmount == 0) {
@@ -81,7 +80,7 @@ export class PaymentService {
                 totalAmount = await productContract.getBuyPriceAfterFee(sharesSubject,amount);
             }
             const wallet = new ethers.Wallet(privateKeyBuyer, provider);
-            const buyContract = new ethers.Contract(process.env.PRODUCT_ADDRESS, SHARES_ABI, wallet);
+            const buyContract = new ethers.Contract(process.env.PRODUCT_ADDRESS || '', SHARES_ABI, wallet);
             const balance = await provider.getBalance(wallet.address)
             if (Number(balance) >= totalAmount)
             {
