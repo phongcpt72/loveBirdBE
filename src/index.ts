@@ -1,6 +1,6 @@
 import { registerProvider } from "@tsed/di";
 import { $log } from "@tsed/common";
-import { Logger } from "@tsed/logger";
+// import { Logger } from "@tsed/logger";
 import { PlatformExpress } from "@tsed/platform-express";
 import { Server } from "./Server";
 import {
@@ -18,10 +18,10 @@ import {
 registerProvider({
   provide: LoveBirdDataSource,
   type: "typeorm:datasource",
-  deps: [Logger],
-  async useAsyncFactory(logger: Logger) {
+  // deps: [Logger],
+  async useAsyncFactory() {
     await LoveBirdDataSource.initialize();
-    logger.info("Connected with typeorm to database: PostgreSQL");
+    // logger.info("Connected with typeorm to database: PostgreSQL");
     return LoveBirdDataSource;
   },
   hooks: {
