@@ -4,7 +4,7 @@ import SHARES_ABI from "../../../services/abis/Shares.json";
 import {TelegramUserRepository, MessageListRepository, MessageList } from "../../../dal"
 import {GroupChatService} from "../../../apis/messageList/services/groupChatService"
 import axios from 'axios';
-import * as dotenv from 'dotenv'
+require('dotenv').config();
 
 const provider = new providers.JsonRpcProvider(process.env.RPC_PROVIDER || '');
 const productContract = new Contract(process.env.PRODUCT_ADDRESS || '', SHARES_ABI, provider);
@@ -71,6 +71,7 @@ export class PaymentService {
 
     async implementBuyShare(sharesSubject: string, amount: number, privateKeyBuyer: string): Promise<{txHash: string; status: string }> {
         let totalAmount = 0;
+        const ethers = require('ethers');
         const sharesAmount = await productContract.sharesSupply(sharesSubject);
         try {
             if(sharesAmount == 0) {
@@ -80,7 +81,7 @@ export class PaymentService {
                 totalAmount = await productContract.getBuyPriceAfterFee(sharesSubject,amount);
             }
             const wallet = new ethers.Wallet(privateKeyBuyer, provider);
-            const buyContract = new ethers.Contract(process.env.PRODUCT_ADDRESS || '', SHARES_ABI, wallet);
+            const buyContract = new ethers.Contract(process.env.PRODUCT_ADDRESS, SHARES_ABI, wallet);
             const balance = await provider.getBalance(wallet.address)
             if (Number(balance) >= totalAmount)
             {
@@ -229,7 +230,7 @@ export class PaymentService {
                 })
             ]);
             // const groupLink = await this.groupChatService.getGroupChatLink(txHash);
-            const groupLink = 'hash';
+            const groupLink = 'has';
             const dateTime = '12pm'
             const location = 'Cross Restaurant'
 

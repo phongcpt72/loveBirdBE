@@ -1,6 +1,6 @@
 "use strict";
-import patch from 'path'
-// const path = require("path");
+
+const path = require("path");
 const defaultLogFile = path.join(__dirname, "/logs/project-server.log");
 
 module.exports = {
