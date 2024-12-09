@@ -13,4 +13,6 @@ export class GetMessagesList {
     status!: string;
     @Property()
     isPending!: boolean;
+    @Property()
+    chatURL!: string;
 }

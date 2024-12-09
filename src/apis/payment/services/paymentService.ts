@@ -3,6 +3,7 @@ import { BigNumber, ethers, FixedNumber, Contract , Wallet, providers, utils} fr
 import SHARES_ABI from "../../../services/abis/Shares.json";
 import {TelegramUserRepository, MessageListRepository, MessageList } from "../../../dal"
 import {GroupChatService} from "../../../apis/messageList/services/groupChatService"
+import {DatingInformationService} from "../../../apis/datingLocation/services/DatingInformationService"
 import axios from 'axios';
 require('dotenv').config();
 
@@ -21,6 +22,8 @@ export class PaymentService {
     @Inject(GroupChatService)
     private readonly groupChatService: GroupChatService;
 
+    @Inject(DatingInformationService)
+    private readonly datingInformationService: DatingInformationService;
     async getPrice(supply: number, amount: number): Promise<number> {
         try {
             const price = await productContract.getPrice(supply, amount);
@@ -229,13 +232,30 @@ export class PaymentService {
                     where: { telegramId: telegramIdMale }
                 })
             ]);
-            // const groupLink = await this.groupChatService.getGroupChatLink(txHash);
-            const groupLink = 'has';
-            const dateTime = '12pm'
-            const location = 'Cross Restaurant'
+            const groupLink = await this.groupChatService.getGroupChatLink(txHash);
+            if (groupLink) {
+                try{
+                    await this.groupChatService.changeGroupName(
+                        userMale?.userName ?? 'User1', 
+                        userFemale?.userName ?? 'User2', 
+                        groupLink
+                    );
+                    console.log("groupLink");
+                    console.log(groupLink);
+                }
+                catch(error){
+                    console.error('Error changing group name:', error);
+                    return false;
+                }
+            }
 
-            const messageForFemale = encodeURIComponent(`You have a Lovebird date with ${userMale?.userName} @ ${dateTime} ${location} ${groupLink}`);
-            const messageForMale = encodeURIComponent(`You have a Lovebird date with ${userFemale?.userName} @ ${dateTime} ${location} ${groupLink}`);
+            const dateAndLocation = await this.datingInformationService.getDateAndLocation(telegramIdMale, telegramIdFemale);
+            if (!dateAndLocation) return false;
+
+            const {location, formattedDate, formattedTime} = dateAndLocation;
+            
+            const messageForFemale = encodeURIComponent(`You have a Lovebird date with ${userMale?.userName} @ ${formattedTime} (${formattedDate}) ${location} ${groupLink}`);
+            const messageForMale = encodeURIComponent(`You have a Lovebird date with ${userFemale?.userName} @ ${formattedTime} (${formattedDate}) ${location} ${groupLink}`);
 
             const urlForFemale = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${telegramIdFemale}&text=${messageForFemale}`;
             const urlForMale = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${telegramIdMale}&text=${messageForMale}`;
