@@ -211,6 +211,7 @@ export class PaymentService {
             messageList.status = "Accepted";
             messageList.isPending = false;
             await this.messageListRepository.save(messageList);
+            
             await this.sendMessage(telegramIdMale, telegramIdFemale, messageList.txHash);
             return true;
 
@@ -220,7 +221,7 @@ export class PaymentService {
         }
     }
 
-    async sendMessage(telegramIdFemale: number, telegramIdMale: number, txHash: string): Promise<boolean> {
+    async sendMessage(telegramIdMale: number, telegramIdFemale: number, txHash: string): Promise<boolean> {
         try{
             const [userFemale, userMale] = await Promise.all([
                 this.telegramUserRepository.findOne({
@@ -253,7 +254,7 @@ export class PaymentService {
             if (!dateAndLocation) return false;
 
             const {location, formattedDate, formattedTime} = dateAndLocation;
-            
+
             const messageForFemale = encodeURIComponent(`You have a Lovebird date with ${userMale?.userName} @ ${formattedTime} (${formattedDate}) ${location} ${groupLink}`);
             const messageForMale = encodeURIComponent(`You have a Lovebird date with ${userFemale?.userName} @ ${formattedTime} (${formattedDate}) ${location} ${groupLink}`);
 
