@@ -5,6 +5,7 @@ import { MessageListRepository, TelegramUser, TelegramUserRepository } from "../
 import { BigNumber, ethers, FixedNumber, Contract , Wallet, providers, utils} from "ethers";
 import { GetUserList } from "../dto/GetUserList";
 import { PaymentService } from "../../payment/services/paymentService";
+import { DatingInformationService } from "../../datingLocation/services/DatingInformationService";
 
 @Injectable()
 export class TelegramUserService {
@@ -18,6 +19,9 @@ export class TelegramUserService {
 
     @Inject(PaymentService)
     private readonly paymentService: PaymentService;
+
+    @Inject(DatingInformationService)
+    private readonly datingInformationService: DatingInformationService;
 
     async createTelegramUser(telegramId: number, gender: string, username: string, age: number): Promise<boolean> {   
         const entity = new TelegramUser();
@@ -139,13 +143,23 @@ export class TelegramUserService {
                 }
             });
 
-            const userList: GetUserList[] = users.map(user => ({
-                telegramId: user.telegramId,
-                username: user.userName, 
-                gender: user.gender,
-                age: user.age,
-                avatar: user.avatar,
-                videos: user.videos
+            const userList: GetUserList[] = await Promise.all(users.map(async user => {
+                const datingInfo = await this.datingInformationService.getDateAndLocation(
+                    currentUser.gender === 'M' ? currentUser.telegramId : user.telegramId,
+                    currentUser.gender === 'F' ? currentUser.telegramId : user.telegramId
+                );
+                return {
+                    telegramId: user.telegramId,
+                    username: user.userName, 
+                    gender: user.gender,
+                    age: user.age,
+                    avatar: user.avatar,
+                    videos: user.videos,
+                    title: datingInfo?.title || '',
+                    address: datingInfo?.address || '',
+                    datingTime: `${datingInfo?.formattedDate || ''} ${datingInfo?.formattedTime || ''}`.trim(),
+                    hasDated: datingInfo?.hasDated || false
+                };
             }));
             return userList;
         } catch (error) {

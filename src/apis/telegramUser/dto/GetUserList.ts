@@ -13,4 +13,11 @@ export class GetUserList {
     avatar!: string;
     @Property()
     videos!: string;
+    @Property()
+    title!: string;
+    @Property()
+    address!: string;
+    @Property()
+    datingTime!: string;
+
 }
