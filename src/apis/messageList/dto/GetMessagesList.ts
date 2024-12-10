@@ -15,4 +15,12 @@ export class GetMessagesList {
     isPending!: boolean;
     @Property()
     chatURL!: string;
+    @Property()
+    title!: string;
+    @Property()
+    address!: string;
+    @Property()
+    datingTime!: string;
+    @Property()
+    hasDated!: boolean;
 }

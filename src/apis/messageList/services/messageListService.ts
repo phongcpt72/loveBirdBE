@@ -3,6 +3,7 @@ import { In ,Not , IsNull} from "typeorm";
 import { MessageListRepository, MessageList, GroupChatLinkRepository } from "../../../dal";
 import { TelegramUserService } from "../../telegramUser/services/telegramUserSevice";
 import { GetMessagesList } from "../dto/GetMessagesList";
+import { DatingInformationService } from "../../datingLocation/services/DatingInformationService";
 
 @Injectable()
 export class MessageListService {
@@ -16,33 +17,61 @@ export class MessageListService {
     @Inject(GroupChatLinkRepository)
     private readonly groupChatLinkRepository: GroupChatLinkRepository;
 
+    @Inject()
+    private readonly datingInformationService: DatingInformationService;
+
+
     async getMessagesList(telegramId: number): Promise<GetMessagesList[]> {
         try {
             if (telegramId === undefined) {
-                return[];
+                return [];
             }
-            const users = await this.messageListRepository.find({
-                select: ["telegramIdFemale","status","isPending"],
-                where: { telegramIdMen: telegramId },
-                order: { created_at: "DESC" }
-            });
-
-            const result = await this.telegramUserService.getUserNameAndAvatar(users.map(user => user.telegramIdFemale));
-            
-
-            const txHashs = await this.getGroupChatLinkByTxHash(telegramId, users.map(user => user.telegramIdFemale));
-
+    
+            const gender = await this.telegramUserService.getGender(telegramId);
+    
+            let users;
+            if (gender === 'M') {
+                users = await this.messageListRepository.find({
+                    select: ["telegramIdFemale", "status", "isPending"],
+                    where: { telegramIdMen: telegramId },
+                    order: { created_at: "DESC" }
+                });
+            } else if (gender === 'F') {
+                users = await this.messageListRepository.find({
+                    select: ["telegramIdMen", "status", "isPending"],
+                    where: { telegramIdFemale: telegramId },
+                    order: { created_at: "DESC" }
+                });
+            } else {
+                return [];
+            }
+    
+            const userIds = users.map(user => gender === 'M' ? user.telegramIdFemale : user.telegramIdMen);
+            const result = await this.telegramUserService.getUserNameAndAvatar(userIds);
+    
+            const txHashs = await this.getGroupChatLinkByTxHash(telegramId, userIds);
+    
             const chatURLs = await this.getGroupChatLink(txHashs);
-            
-            // Combine users and result arrays
-            const userMessagesList: GetMessagesList[] = users.map((user, index) => ({
-                telegramIdMale: telegramId,
-                telegramIdFemale: user.telegramIdFemale,
-                username: result[index]?.userName || '',
-                avatarFemale: result[index]?.avatar || '',
-                status: user.status,
-                isPending: user.isPending,
-                chatURL: chatURLs[index] || ''
+    
+            const userMessagesList: GetMessagesList[] = await Promise.all(users.map(async (user, index) => {
+                const telegramIdMale = gender === 'M' ? telegramId : user.telegramIdMen;
+                const telegramIdFemale = gender === 'M' ? user.telegramIdFemale : telegramId;
+                
+                const datingInfo = await this.datingInformationService.getDateAndLocation(telegramIdMale, telegramIdFemale);
+
+                return {
+                    telegramIdMale,
+                    telegramIdFemale,
+                    username: result[index]?.userName || '',
+                    avatarFemale: result[index]?.avatar || '',
+                    status: user.status,
+                    isPending: user.isPending,
+                    chatURL: chatURLs[index] || '',
+                    title: datingInfo?.title || '',
+                    address: datingInfo?.address || '',
+                    datingTime: `${datingInfo?.formattedDate || ''} ${datingInfo?.formattedTime || ''}`.trim(),
+                    hasDated: datingInfo?.hasDated || false
+                };
             }));
             return userMessagesList;
         } catch (error) {

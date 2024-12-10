@@ -34,6 +34,10 @@ export class DatingInformation {
   @Column({ nullable: true, type: 'bigint' })
   @Property()
   datingTime: number;
+  
+  @Column({ nullable: true })
+  @Property()
+  hasDated: boolean;
 
   @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
   public created_at: Date;

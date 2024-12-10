@@ -31,6 +31,24 @@ export class DatingInformationController {
         res.status(500).send({ message: 'Internal server error', error: error.message });
         }
   }
+
+  @Post("/update-has-dated")
+  @Summary("Update has dated")
+  @Description("Updates has dated")
+  @Returns(201, String)
+  @Returns(400, String)
+  async updateHasDated(@BodyParams("telegramIdMale") telegramIdMale: number, @BodyParams("telegramIdFemale") telegramIdFemale: number,@Res() res: Res): Promise<void> {
+    try {
+        const result = await this.datingInformationService.updateHasDated(telegramIdMale, telegramIdFemale);
+        if (result) {
+            res.status(201).send({ message: 'Has dated updated successfully' });
+        } else {
+            res.status(400).send({ message: 'Has dated update failed' });
+        }
+    } catch (error) {
+        res.status(500).send({ message: 'Internal server error', error: error.message });
+    }
+  }
     
 
 }

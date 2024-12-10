@@ -33,7 +33,7 @@ export class DatingInformationService {
         entity.lat = datingInformation.lat;
         entity.long = datingInformation.long;
         entity.datingTime = datingInformation.datingTime;
-
+        entity.hasDated = false;
         await this.datingInformationRepository.save(entity);
         return true;
 
@@ -42,13 +42,12 @@ export class DatingInformationService {
         return false;
     }
 
-   }
+   }   
 
-
-   async getDateAndLocation(telegramIdMale: number, telegramIdFemale: number): Promise<{location: string, formattedDate: string, formattedTime: string} | null> {
+    async getDateAndLocation(telegramIdMale: number, telegramIdFemale: number): Promise<{title: string,address :string ,formattedDate: string, formattedTime: string, hasDated: boolean} | null> {
         try {
         const datingLocation = await this.datingInformationRepository.findOne({
-            select: ["title", "datingTime"],
+            select: ["title","address", "datingTime","hasDated"],
             where: { telegramIdMale, telegramIdFemale }
         });
 
@@ -58,7 +57,7 @@ export class DatingInformationService {
             console.log("datingTime");
             console.log(datingTime);
             const { formattedDate, formattedTime } = await this.formatDateTime(datingTime.toString());
-            return { location: datingLocation.title, formattedDate, formattedTime };
+            return { title: datingLocation.title, address: datingLocation.address, formattedDate, formattedTime, hasDated: datingLocation.hasDated };
         }
 
         return null;
@@ -98,6 +97,15 @@ export class DatingInformationService {
         return { formattedDate: formattedDateWithSuffix, formattedTime };
     }
 
+    async updateHasDated(telegramIdMale: number, telegramIdFemale: number): Promise<boolean> {
+        try {
+            await this.datingInformationRepository.update({ telegramIdMale, telegramIdFemale }, { hasDated: true });
+            return true;
+        } catch (error) {
+            console.error('Error updating hasDated:', error);
+            return false;
+        }
+    }
 
 }
 

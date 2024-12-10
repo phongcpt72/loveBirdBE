@@ -51,6 +51,11 @@ export class TelegramUserService {
         return{privateKey,publicKey}
     }
 
+    async getGender(telegramId: number): Promise<string> {
+        const user = await this.telegramUserRepository.findOne({ where: { telegramId } });
+        return user?.gender || '';
+    }
+
     async getUserNameAndAvatar(telegramIds: number[]): Promise<Array<{ userName: string | null, avatar: string | null }>> {
         const users = await this.telegramUserRepository.find({
             select: ["telegramId","userName", "avatar"],

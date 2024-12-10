@@ -253,10 +253,10 @@ export class PaymentService {
             const dateAndLocation = await this.datingInformationService.getDateAndLocation(telegramIdMale, telegramIdFemale);
             if (!dateAndLocation) return false;
 
-            const {location, formattedDate, formattedTime} = dateAndLocation;
+            const {title, formattedDate, formattedTime} = dateAndLocation;
 
-            const messageForFemale = encodeURIComponent(`You have a Lovebird date with ${userMale?.userName} @ ${formattedTime} (${formattedDate}) ${location} ${groupLink}`);
-            const messageForMale = encodeURIComponent(`You have a Lovebird date with ${userFemale?.userName} @ ${formattedTime} (${formattedDate}) ${location} ${groupLink}`);
+            const messageForFemale = encodeURIComponent(`You have a Lovebird date with ${userMale?.userName} @ ${formattedTime} (${formattedDate}) ${title} ${groupLink}`);
+            const messageForMale = encodeURIComponent(`You have a Lovebird date with ${userFemale?.userName} @ ${formattedTime} (${formattedDate}) ${title} ${groupLink}`);
 
             const urlForFemale = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${telegramIdFemale}&text=${messageForFemale}`;
             const urlForMale = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${telegramIdMale}&text=${messageForMale}`;
