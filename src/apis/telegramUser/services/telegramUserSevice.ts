@@ -1,9 +1,11 @@
 import { Inject, Injectable } from "@tsed/di";
 import { In ,Not , IsNull} from "typeorm";
-// import { Product, ProductRepository, User, UserRepository, HistoryRepository } from "../../../dal";
 import { CreateTelegramUserDto } from "../dto/CreateTelegramUserDto";
-import { TelegramUser, TelegramUserRepository } from "../../../dal";
+import { MessageListRepository, TelegramUser, TelegramUserRepository } from "../../../dal";
 import { BigNumber, ethers, FixedNumber, Contract , Wallet, providers, utils} from "ethers";
+import { GetUserList } from "../dto/GetUserList";
+import { PaymentService } from "../../payment/services/paymentService";
+import { DatingInformationService } from "../../datingLocation/services/DatingInformationService";
 
 @Injectable()
 export class TelegramUserService {
@@ -11,6 +13,15 @@ export class TelegramUserService {
 
     @Inject(TelegramUserRepository)
     private readonly telegramUserRepository: TelegramUserRepository;
+
+    @Inject(MessageListRepository)
+    private readonly messageListRepository: MessageListRepository;
+
+    @Inject(PaymentService)
+    private readonly paymentService: PaymentService;
+
+    @Inject(DatingInformationService)
+    private readonly datingInformationService: DatingInformationService;
 
     async createTelegramUser(telegramId: number, gender: string, username: string, age: number): Promise<boolean> {   
         const entity = new TelegramUser();
@@ -44,60 +55,117 @@ export class TelegramUserService {
         return{privateKey,publicKey}
     }
 
+    async getGender(telegramId: number): Promise<string> {
+        const user = await this.telegramUserRepository.findOne({ where: { telegramId } });
+        return user?.gender || '';
+    }
+
+    async getUserNameAndAvatar(telegramIds: number[]): Promise<Array<{ userName: string | null, avatar: string | null }>> {
+        const users = await this.telegramUserRepository.find({
+            select: ["telegramId","userName", "avatar"],
+            where: { telegramId: In(telegramIds) }
+        });
+        return telegramIds.map(id => {
+            const user = users.find(u => u.telegramId === id);
+            return {
+                userName: user?.userName || null,
+                avatar: user?.avatar || null
+            };
+        });
+    }
+
     async getTelegramUser(telegramId: number): Promise<{ 
+        telegramId: number | null;
         username: string | null; 
         gender: string | null; 
         age: number | null; 
-        avatar: string | null 
+        avatar: string | null;
+        publicKey: string | null;
+        balance: string | null;
     } | null> {
         try {
+            if (telegramId === undefined) {
+                return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null, balance: null };
+            }
             const user = await this.telegramUserRepository.findOne({
-                select: ["userName", "gender", "age", "avatar"],
+                select: ["userName", "gender", "age", "avatar","publicKey"],
                 where: { telegramId }
             });
 
             if (user) {
-                const { userName: username, gender, age, avatar } = user;
-                return { username, gender, age, avatar };
+                const { userName: username, gender, age, avatar, publicKey } = user;
+                const balance = await this.paymentService.getBalance(publicKey);
+                console.log(user);
+                console.log(balance);
+                return { telegramId, username, gender, age, avatar, publicKey, balance: balance.toString() };
             }
-            // Return an object with null values if the user is not found
-            return { username: null, gender: null, age: null, avatar: null };
+            
+            return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null, balance: null };
         } catch (error) {
             console.error("Error retrieving Telegram user information:", error);
-            return { username: null, gender: null, age: null, avatar: null };
+            return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null, balance: null };
         }
     }
 
-    async listTelegramUser(telegramId: number): Promise<string> {
-        try {
-            // Find the user with the given telegramId
-            const currentUser = await this.telegramUserRepository.findOne({ where: { telegramId } });
+    async filterUserList(telegramId: number, gender: string): Promise<{ telegramIdFilter: number[] }> {
+        const users = await this.messageListRepository.find({
+            select: [gender === 'F' ? "telegramIdMen" : "telegramIdFemale"],
+            where: {
+                [gender === 'F' ? "telegramIdFemale" : "telegramIdMen"]: telegramId
+            }
+        });
+        const telegramIds = users.map(user => 
+            gender === 'F' ? user.telegramIdMen : user.telegramIdFemale
+        );
+        return { telegramIdFilter: telegramIds };
+    }
 
+
+    async getUserList(telegramId: number): Promise<GetUserList[]> {
+        try {
+            const currentUser = await this.telegramUserRepository.findOne({ where: { telegramId } });
             if (!currentUser) {
                 console.error("User not found with the given telegramId");
-                return JSON.stringify([]);
+                return [];
             }
-
-            // Determine the opposite gender
             const oppositeGender = currentUser.gender === 'F' ? 'M' : 'F';
+            const { telegramIdFilter } = await this.filterUserList(telegramId, currentUser.gender);
 
-            // Fetch users of the opposite gender, selecting only specific columns
             const users = await this.telegramUserRepository.find({
-                select: ["userName", "gender", "age"],
-                where: { gender: oppositeGender }
+                select: ["telegramId", "userName", "gender", "age", "avatar", "videos"],
+                where: {
+                    gender: oppositeGender,
+                    telegramId: telegramIdFilter.length > 0 
+                        ? currentUser.gender === 'M' 
+                            ? Not(In(telegramIdFilter)) 
+                            : In(telegramIdFilter)
+                        : undefined
+                }
             });
-            console.log(users);
-            // Convert the result to JSON
-            return JSON.stringify(users);
-        } catch (error) {
-            console.error("Error listing Telegram users:", error);
-            return JSON.stringify([]);
-        }
-    }
 
-    async listTelegramUsers(): Promise<string> {
-        const users = await this.telegramUserRepository.find();
-        return JSON.stringify(users);
+            const userList: GetUserList[] = await Promise.all(users.map(async user => {
+                const datingInfo = await this.datingInformationService.getDateAndLocation(
+                    currentUser.gender === 'M' ? currentUser.telegramId : user.telegramId,
+                    currentUser.gender === 'F' ? currentUser.telegramId : user.telegramId
+                );
+                return {
+                    telegramId: user.telegramId,
+                    username: user.userName, 
+                    gender: user.gender,
+                    age: user.age,
+                    avatar: user.avatar,
+                    videos: user.videos,
+                    title: datingInfo?.title || '',
+                    address: datingInfo?.address || '',
+                    datingTime: `${datingInfo?.formattedDate || ''} ${datingInfo?.formattedTime || ''}`.trim(),
+                    hasDated: datingInfo?.hasDated || false
+                };
+            }));
+            return userList;
+        } catch (error) {
+            console.error("Error retrieving Telegram user information:", error);
+            return [];
+        }
     }
 
 }

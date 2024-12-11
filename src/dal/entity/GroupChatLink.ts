@@ -2,47 +2,22 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { Property, Required } from "@tsed/schema";
 
 
-@Entity("telegram_users")
-export class TelegramUser {
+@Entity("group_chat_link")
+export class GroupChatLink {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ nullable: true })
   @Property()
-  @Required()
-  userName: string;
+  txHash: string;
 
   @Column({ nullable: true })
   @Property()
-  telegramId: number;
+  link: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: false })
   @Property()
-  gender: string;
-
-  @Column({ nullable: true })
-  @Property()
-  age: number;
-
-  @Column({ nullable: true })
-  @Property()
-  publicKey: string;
-
-  @Column({ nullable: true })
-  @Property()
-  privateKey: string;
-
-  @Column({ type: "json", nullable: true })
-  @Property()
-  images: string[];
-
-  @Column({ nullable: true })
-  @Property()
-  videos: string;
-
-  @Column({ nullable: true })
-  @Property()
-  avatar: string;
+  isUsed: boolean;
 
   @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
   public created_at: Date;

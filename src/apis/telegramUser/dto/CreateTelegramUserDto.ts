@@ -1,24 +1,12 @@
 import { Property, Required, MaxLength, MinLength } from "@tsed/schema";
 
 export class CreateTelegramUserDto {
-
-    @Property()
     @Required()
-    telegramId: number;
-
-    @Property()
+    telegramId!: number;
     @Required()
-    // @MinLength(3)
-    // @MaxLength(20)
-    username: string;
-
-    @Property()
+    gender!: string;
     @Required()
-    gender: string;
-
-    @Property()
+    username!: string;
     @Required()
-    // @MinLength(3)
-    // @MaxLength(20)
-    address: string;
+    age!: number;
 }

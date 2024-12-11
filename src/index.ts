@@ -6,7 +6,13 @@ import { Server } from "./Server";
 import {
   LoveBirdDataSource,
   TelegramUserRepository,
-  TelegramUser
+  TelegramUser,
+  MessageListRepository,
+  MessageList,
+  GroupChatLinkRepository,
+  GroupChatLink,
+  DatingInformation,
+  DatingInformationRepository
 } from "./dal";
 
 registerProvider({
@@ -29,6 +35,21 @@ registerProvider({
 registerProvider({
   provide: TelegramUserRepository,
   useValue: new TelegramUserRepository(TelegramUser, LoveBirdDataSource.createEntityManager()),
+});
+
+registerProvider({
+  provide: MessageListRepository,
+  useValue: new MessageListRepository(MessageList, LoveBirdDataSource.createEntityManager()),
+});
+
+registerProvider({
+  provide: GroupChatLinkRepository,
+  useValue: new GroupChatLinkRepository(GroupChatLink, LoveBirdDataSource.createEntityManager()),
+});
+
+registerProvider({
+  provide: DatingInformationRepository,
+  useValue: new DatingInformationRepository(DatingInformation, LoveBirdDataSource.createEntityManager()),
 });
 
 async function bootstrap() {
