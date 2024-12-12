@@ -208,27 +208,42 @@ export class TelegramUserService {
                 select: ["telegramIdMen"],
                 where: {
                     telegramIdFemale: telegramId,
-                    hasAccepted: false
                 }
             });
-            const offeredMenIds = hasOffered.map(offer => offer.telegramIdMen);
 
-            const userList: GetFemaleUserList[] = await Promise.all(allMaleUsers.map(async (user) => {
-                const datingInfo = await this.datingInformationService.getDateAndLocation(user.telegramId, telegramId);
-                return {
-                    telegramId: user.telegramId,
-                    username: user.userName,
-                    gender: user.gender,
-                    age: user.age,
-                    avatar: user.avatar,
-                    videos: user.videos,
-                    title: datingInfo?.title || '',
-                    address: datingInfo?.address || '',
-                    datingTime: datingInfo?.datingTime || 0,
-                    hasLiked: currentUser.likedUsers?.includes(`${user.telegramId}`) || false,
-                    hasOffered: offeredMenIds.includes(user.telegramId)
-                };
-            }));
+            const hasAccepted = await this.messageListRepository.find({
+                select: ["telegramIdMen"],
+                where: {
+                    telegramIdFemale: telegramId,
+                    hasAccepted: true
+                }
+            });
+
+            const offeredMenIds = hasOffered.map(offer => offer.telegramIdMen);
+            const acceptedMenIds = hasAccepted.map(accept => accept.telegramIdMen);
+            console.log(offeredMenIds);
+
+
+            const userList: GetFemaleUserList[] = await Promise.all(
+                allMaleUsers
+                    .filter(user => !acceptedMenIds.includes(user.telegramId)) // Filter out accepted users
+                    .map(async (user) => {
+                        const datingInfo = await this.datingInformationService.getDateAndLocation(user.telegramId, telegramId);
+                        return {
+                            telegramId: user.telegramId,
+                            username: user.userName,
+                            gender: user.gender,
+                            age: user.age,
+                            avatar: user.avatar,
+                            videos: user.videos,
+                            title: datingInfo?.title || '',
+                            address: datingInfo?.address || '',
+                            datingTime: datingInfo?.datingTime || 0,
+                            hasLiked: currentUser.likedUsers?.includes(`${user.telegramId}`) || false,
+                            hasOffered: offeredMenIds.includes(user.telegramId)
+                        };
+                    })
+            );
             // Sort the userList - users with hasOffered=true will appear first
             userList.sort((a, b) => (b.hasOffered ? 1 : 0) - (a.hasOffered ? 1 : 0));
             return userList;
