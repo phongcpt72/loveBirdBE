@@ -17,11 +17,11 @@ export class PaymentController {
     async buyShare(
         @BodyParams("telegramIdBuyer") telegramIdBuyer: number,
         @BodyParams("telegramIdFemale") telegramIdFemale: number,
-        @BodyParams("amount") amount: number,
+        @BodyParams("tokenAddress") tokenAddress: string,
         @Res() res: Res
     ): Promise<void> {
         try {
-            const result = await this.paymentService.buyShare(telegramIdBuyer, telegramIdFemale, amount);
+            const result = await this.paymentService.buyShare(telegramIdBuyer, telegramIdFemale, tokenAddress);
             console.log(result);
             if (result) {
                 res.status(201).send({ message: 'Transaction successful' });

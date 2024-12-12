@@ -48,6 +48,16 @@ export class TelegramUserController {
         return await this.telegramUserService.getUserList(telegramId);
     }
 
+    @Post("/like-user")
+    @Summary("Like a user")
+    @Returns(200, Boolean)
+    async likeUser(
+        @QueryParams("telegramId") telegramId: number,
+        @QueryParams("likedTelegramId") likedTelegramId: number
+    ): Promise<boolean> {
+        return await this.telegramUserService.likeUser(telegramId, likedTelegramId);
+    }
+
 
 
 

@@ -44,6 +44,9 @@ export class TelegramUser {
   @Property()
   avatar: string;
 
+  @Column("simple-array", { nullable: true })
+  likedUsers: string[];
+
   @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
   public created_at: Date;
 

@@ -19,5 +19,7 @@ export class GetUserList {
     address!: string;
     @Property()
     datingTime!: string;
+    @Property()
+    hasLiked!: boolean;
 
 }

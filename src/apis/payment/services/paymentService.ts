@@ -1,6 +1,7 @@
 import { Inject, Injectable } from "@tsed/di";
 import { BigNumber, ethers, FixedNumber, Contract , Wallet, providers, utils} from "ethers";
 import SHARES_ABI from "../../../services/abis/Shares.json";
+import ERC20_ABI from "../../../services/abis/ERC20.json";
 import {TelegramUserRepository, MessageListRepository, MessageList } from "../../../dal"
 import {GroupChatService} from "../../../apis/messageList/services/groupChatService"
 import {DatingInformationService} from "../../../apis/datingLocation/services/DatingInformationService"
@@ -8,8 +9,7 @@ import axios from 'axios';
 require('dotenv').config();
 
 const provider = new providers.JsonRpcProvider(process.env.RPC_PROVIDER || '');
-const productContract = new Contract(process.env.PRODUCT_ADDRESS || '', SHARES_ABI, provider);
-const percent = 1e18;
+
 @Injectable()
 export class PaymentService {
 
@@ -24,85 +24,56 @@ export class PaymentService {
 
     @Inject(DatingInformationService)
     private readonly datingInformationService: DatingInformationService;
-    async getPrice(supply: number, amount: number): Promise<number> {
-        try {
-            const price = await productContract.getPrice(supply, amount);
-            const priceNumber = BigNumber.from(price).toNumber();
-            console.log(priceNumber);
-            return priceNumber;
-        } catch (error) {
-            console.error('Error getting price:', error);
-            throw error;
-        }
-    }
-
-    async getProtocolFeePercent(): Promise<number> {
-        return Number(await productContract.protocolFeePercent());
-    }
-
-    async getSubjectFeePercent(): Promise<number> {
-        return Number(await productContract.subjectFeePercent());
-    }
-
-    async getBuyPriceInformation(sharesSubject: string, sharesAmount: number, amount: number): Promise<number> {
-        let buyPrice;
-        if(sharesAmount == 0){
-            buyPrice = await productContract.getPrice(1, amount);
-        }
-        else{
-            buyPrice = await productContract.getBuyPrice(sharesSubject, amount);
-        }
-
-        const protocolFeePercent = await this.getProtocolFeePercent();
-        const protocolFeeAmount = Number(buyPrice * protocolFeePercent / percent);
-        const subjectFeePercent = await this.getSubjectFeePercent();
-        const subjectFeeAmount = Number(buyPrice * subjectFeePercent / percent);
-        const finalPrice = Number(buyPrice) + protocolFeeAmount + subjectFeeAmount;
-        return finalPrice;
-    }
-
-
-    async buyShareFirst(sharesSubject: string,sharesAmount:number, amount: number): Promise<number> {
-        const finalPrice = await this.getBuyPriceInformation(sharesSubject,sharesAmount , amount);
-        return finalPrice;
-    }
 
     async getBalance(publicKey: string): Promise<number> {
         const balance = await provider.getBalance(publicKey);
         return Number((Number(balance)/1e18).toFixed(6));
     }
 
-    async implementBuyShare(sharesSubject: string, amount: number, privateKeyBuyer: string): Promise<{txHash: string; status: string }> {
+    async implementBuyShare(sharesSubject: string, amount: number, privateKeyBuyer: string, tokenAddress: string): Promise<{txHash: string; status: string }> {
         let totalAmount = 0;
         const ethers = require('ethers');
-        const sharesAmount = await productContract.sharesSupply(sharesSubject);
+        const wallet = new ethers.Wallet(privateKeyBuyer, provider);
+        const token = new Contract(tokenAddress, ERC20_ABI, wallet);
+        const balance = await token.balanceOf(wallet.address);
         try {
-            if(sharesAmount == 0) {
-                totalAmount = await this.buyShareFirst(sharesSubject, sharesAmount, amount);
-            }
-            else{
-                totalAmount = await productContract.getBuyPriceAfterFee(sharesSubject,amount);
-            }
-            const wallet = new ethers.Wallet(privateKeyBuyer, provider);
-            const buyContract = new ethers.Contract(process.env.PRODUCT_ADDRESS, SHARES_ABI, wallet);
-            const balance = await provider.getBalance(wallet.address)
-            if (Number(balance) >= totalAmount)
+            const sharesContract = new ethers.Contract(process.env.PRODUCT_ADDRESS, SHARES_ABI, wallet);
+            const sharePrice = await sharesContract.getPrice(tokenAddress)
+            if (Number(balance) >= Number(sharePrice))
             {
                 const gasPrice = await provider.getGasPrice();
-                const nonce = await provider.getTransactionCount(wallet.address);
-                const tx = await buyContract.buyShares(
-                    sharesSubject,
-                    amount,
+                const nonce = await provider.getTransactionCount(wallet.address, 'latest');
+                const gasLimit = ethers.utils.hexlify(1000000);
+
+                const approveTx = await token.approve(sharesContract.address, sharePrice,
                     {
                         from: wallet.address,
-                        value: totalAmount,
                         gasPrice: gasPrice,
+                        gasLimit: gasLimit,
                         nonce: nonce
                     }
                 );
-                const txHash = tx.hash;
-                const status = await this.checkTransactionStatus(txHash);
-                return {txHash,status};
+
+                // Wait for 1 second after approve
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                if(await this.checkTransactionStatus(approveTx.hash) == 'success'){
+                    const updatedNonce = await provider.getTransactionCount(wallet.address, 'latest');
+                    const tx = await sharesContract.buyShares(
+                        sharesSubject,
+                        amount,
+                        tokenAddress,
+                        {
+                            from: wallet.address,
+                            gasPrice: gasPrice,
+                            gasLimit: gasLimit,
+                            nonce: updatedNonce
+                        }
+                    );
+                    const txHash = tx.hash;
+                    const status = await this.checkTransactionStatus(txHash);
+                    return {txHash,status};
+            }
             }
             return {txHash: '',status: 'insufficient_balance'};
         } catch (error) {
@@ -111,7 +82,7 @@ export class PaymentService {
         }
     }
 
-    async buyShare(telegramIdBuyer: number, telegramIdFemale: number, amount: number): Promise<boolean> {
+    async buyShare(telegramIdBuyer: number, telegramIdFemale: number, tokenAddress: string): Promise<boolean> {
         try {
             if (telegramIdBuyer === undefined && telegramIdFemale === undefined) {
                 return false;
@@ -128,7 +99,7 @@ export class PaymentService {
 
 
             if(buyer && female){
-                const result = await this.implementBuyShare(female.publicKey, amount, buyer.privateKey);
+                const result = await this.implementBuyShare(female.publicKey, 1, buyer.privateKey, tokenAddress);
                 if(result.status == 'success'){
                     const messageList = new MessageList();
                     messageList.telegramIdMen = telegramIdBuyer;
