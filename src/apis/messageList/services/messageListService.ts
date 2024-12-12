@@ -69,7 +69,7 @@ export class MessageListService {
                     chatURL: chatURLs[index] || '',
                     title: datingInfo?.title || '',
                     address: datingInfo?.address || '',
-                    datingTime: `${datingInfo?.formattedDate || ''} ${datingInfo?.formattedTime || ''}`.trim(),
+                    datingTime: datingInfo?.datingTime || 0,
                     hasDated: datingInfo?.hasDated || false
                 };
             }));
