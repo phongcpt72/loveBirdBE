@@ -3,7 +3,8 @@ import { In ,Not , IsNull, ArrayContains} from "typeorm";
 import { CreateTelegramUserDto } from "../dto/CreateTelegramUserDto";
 import { MessageListRepository, TelegramUser, TelegramUserRepository, MessageList } from "../../../dal";
 import { BigNumber, ethers, FixedNumber, Contract , Wallet, providers, utils} from "ethers";
-import { GetUserList } from "../dto/GetUserList";
+import { GetFemaleUserList } from "../dto/GetFemaleUserList";
+import { GetMaleUserList } from "../dto/GetMaleUserList";
 import { PaymentService } from "../../payment/services/paymentService";
 import { DatingInformationService } from "../../datingLocation/services/DatingInformationService";
 
@@ -123,57 +124,34 @@ export class TelegramUserService {
     }
 
 
-    async getUserList(telegramId: number): Promise<GetUserList[]> {
+    async getMaleUserList(telegramId: number): Promise<GetMaleUserList[]> {
         try {
             const currentUser = await this.telegramUserRepository.findOne({ where: { telegramId } });
             if (!currentUser) {
                 console.error("User not found with the given telegramId");
                 return [];
             }
-
-            const oppositeGender = currentUser.gender === 'F' ? 'M' : 'F';
             const { telegramIdFilter } = await this.filterUserList(telegramId, currentUser.gender);
 
             let users: TelegramUser[] = [];
             
-            if (currentUser.gender === 'M') {
-                // For men:
-                // 1. Get women who have liked them
-                const usersWhoLikedMe = await this.telegramUserRepository
-                    .createQueryBuilder('user')
-                    .where('user.gender = :gender', { gender: 'F' })
-                    .andWhere(':telegramId = ANY(string_to_array(user.likedUsers, \',\')::integer[])', { telegramId })
-                    .getMany();
-                // Rest of the code remains the same
-                const womenNotInMessageList = await this.telegramUserRepository.find({
-                    where: {
-                        gender: 'F',
-                        telegramId: Not(In([
-                            ...telegramIdFilter,
-                            ...usersWhoLikedMe.map(u => u.telegramId)
-                        ]))
-                    }
-                });
-                // 3. Combine the lists: first liked users, then users not in message list
-                users = [...usersWhoLikedMe, ...womenNotInMessageList];
-                // users = await this.getMaleUserList(telegramId, telegramIdFilter);
-                // console.log(userListTest);
-            } else {
-                // For women, behavior remains the same
-                users = await this.telegramUserRepository.find({
-                    where: {
-                        gender: oppositeGender,
-                        ...(telegramIdFilter.length > 0 && { telegramId: In(telegramIdFilter) })
-                    }
-                });
-            }
-
-            const userList: GetUserList[] = await Promise.all(users.map(async user => {
-                const datingInfo = await this.datingInformationService.getDateAndLocation(
-                    currentUser.gender === 'M' ? currentUser.telegramId : user.telegramId,
-                    currentUser.gender === 'F' ? currentUser.telegramId : user.telegramId
-                );
-                
+            const usersWhoLikedMe = await this.telegramUserRepository
+                .createQueryBuilder('user')
+                .where('user.gender = :gender', { gender: 'F' })
+                .andWhere(':telegramId = ANY(string_to_array(user.likedUsers, \',\')::integer[])', { telegramId })
+                .getMany();
+    
+            const womenNotInMessageList = await this.telegramUserRepository.find({
+                where: {
+                    gender: 'F',
+                    telegramId: Not(In([
+                        ...telegramIdFilter,
+                        ...usersWhoLikedMe.map(u => u.telegramId)
+                    ]))
+                }
+            });
+            users = [...usersWhoLikedMe, ...womenNotInMessageList];
+            const userList: GetMaleUserList[] = await Promise.all(users.map(async user => {
                 return {
                     telegramId: user.telegramId,
                     username: user.userName,
@@ -181,9 +159,6 @@ export class TelegramUserService {
                     age: user.age,
                     avatar: user.avatar,
                     videos: user.videos,
-                    title: datingInfo?.title || '',
-                    address: datingInfo?.address || '',
-                    datingTime: `${datingInfo?.formattedDate || ''} ${datingInfo?.formattedTime || ''}`.trim(),
                     hasLiked:  user.likedUsers?.includes(`${currentUser.telegramId}`) || false
 
                 };
@@ -196,27 +171,51 @@ export class TelegramUserService {
         }
     }
 
-    async getMaleUserList(telegramId: number, telegramIdFilter: number[]): Promise<TelegramUser[]> {
-        let users: TelegramUser[];
-
-        const usersWhoLikedMe = await this.telegramUserRepository
-            .createQueryBuilder('user')
-            .where('user.gender = :gender', { gender: 'F' })
-            .andWhere(':telegramId = ANY(string_to_array(user.likedUsers, \',\')::integer[])', { telegramId })
-            .getMany();
-        
-        const womenNotInMessageList = await this.telegramUserRepository.find({
-            where: {
-                gender: 'F',
-                telegramId: Not(In([
-                    ...telegramIdFilter,
-                    ...usersWhoLikedMe.map(u => u.telegramId)
-                ]))
+    async getFemaleUserList(telegramId: number): Promise<GetFemaleUserList[]> {
+        try {
+            const currentUser = await this.telegramUserRepository.findOne({ where: { telegramId } });
+            if (!currentUser) {
+                console.error("User not found with the given telegramId");
+                return [];
             }
-        });
 
-        users = [...usersWhoLikedMe, ...womenNotInMessageList];
-        return users;
+            const allMaleUsers = await this.telegramUserRepository.find({
+                where: { 
+                    gender: 'M'
+            }
+            });
+            
+            const hasOffered = await this.messageListRepository.find({
+                select: ["telegramIdMen"],
+                where: {
+                    telegramIdFemale: telegramId
+                }
+            });
+            const offeredMenIds = hasOffered.map(offer => offer.telegramIdMen);
+
+            const userList: GetFemaleUserList[] = await Promise.all(allMaleUsers.map(async (user) => {
+                const datingInfo = await this.datingInformationService.getDateAndLocation(user.telegramId, telegramId);
+                return {
+                    telegramId: user.telegramId,
+                    username: user.userName,
+                    gender: user.gender,
+                    age: user.age,
+                    avatar: user.avatar,
+                    videos: user.videos,
+                    title: datingInfo?.title || '',
+                    address: datingInfo?.address || '',
+                    datingTime: datingInfo?.datingTime || 0,
+                    hasLiked: currentUser.likedUsers?.includes(`${user.telegramId}`) || false,
+                    hasOffered: offeredMenIds.includes(user.telegramId)
+                };
+            }));
+            // Sort the userList - users with hasOffered=true will appear first
+            userList.sort((a, b) => (b.hasOffered ? 1 : 0) - (a.hasOffered ? 1 : 0));
+            return userList;
+        } catch (error) {
+            console.error("Error retrieving Telegram user information:", error);
+            return [];
+        }
     }
 
     async likeUser(telegramId: number, likedTelegramId: number): Promise<boolean> {

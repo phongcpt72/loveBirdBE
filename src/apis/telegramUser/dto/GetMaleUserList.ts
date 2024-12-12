@@ -1,6 +1,6 @@
 import { Property, Required, MaxLength, MinLength } from "@tsed/schema";
 
-export class GetUserList {
+export class GetMaleUserList {
     @Property()
     telegramId!: number;
     @Property()
@@ -14,12 +14,5 @@ export class GetUserList {
     @Property()
     videos!: string;
     @Property()
-    title!: string;
-    @Property()
-    address!: string;
-    @Property()
-    datingTime!: string;
-    @Property()
     hasLiked!: boolean;
-
 }

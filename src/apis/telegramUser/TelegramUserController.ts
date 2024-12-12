@@ -4,8 +4,8 @@ import { Get, Post, Returns, Summary, Description } from "@tsed/schema";
 import { BodyParams, PathParams, QueryParams } from "@tsed/platform-params";
 import { CreateTelegramUserDto } from "./dto/CreateTelegramUserDto";
 import { TelegramUserService } from "./services/telegramUserSevice";
-import { GetUserList } from "./dto/GetUserList";
-
+import { GetFemaleUserList } from "./dto/GetFemaleUserList";
+import { GetMaleUserList } from "./dto/GetMaleUserList";
 
 @Controller("/telegramusers")
 export class TelegramUserController {
@@ -41,24 +41,28 @@ export class TelegramUserController {
     }
 
 
-    @Get("/get-user-list")
+    @Get("/get-male-user-list")
     @Summary("Get a list of users of the opposite gender")
-    @Returns(200, GetUserList)
-    async getUserList(@QueryParams("telegramId") telegramId: number): Promise<GetUserList[]> {
-        return await this.telegramUserService.getUserList(telegramId);
+    @Returns(200, GetMaleUserList)
+    async getMaleUserList(@QueryParams("telegramId") telegramId: number): Promise<GetMaleUserList[]> {
+        return await this.telegramUserService.getMaleUserList(telegramId);
+    }
+
+    @Get("/get-female-user-list")
+    @Summary("Get a list of users of the opposite gender")
+    @Returns(200, GetFemaleUserList)
+    async getFemaleUserList(@QueryParams("telegramId") telegramId: number): Promise<GetFemaleUserList[]> {
+        return await this.telegramUserService.getFemaleUserList(telegramId);
     }
 
     @Post("/like-user")
     @Summary("Like a user")
     @Returns(200, Boolean)
     async likeUser(
-        @QueryParams("telegramId") telegramId: number,
-        @QueryParams("likedTelegramId") likedTelegramId: number
+        @BodyParams("telegramId") telegramId: number,
+        @BodyParams("likedTelegramId") likedTelegramId: number
     ): Promise<boolean> {
         return await this.telegramUserService.likeUser(telegramId, likedTelegramId);
     }
-
-
-
 
 }
