@@ -33,6 +33,11 @@ export class TelegramUserService {
         await queryRunner.startTransaction();
         
         try {
+            const currentUser = await this.telegramUserRepository.findOne({ where: { telegramId } });
+            if (currentUser) {
+                console.error("User already exists");
+                return false;
+            }
             const entity = new TelegramUser();
             const wallet = await this.createWallet();
             
@@ -202,7 +207,8 @@ export class TelegramUserService {
             const hasOffered = await this.messageListRepository.find({
                 select: ["telegramIdMen"],
                 where: {
-                    telegramIdFemale: telegramId
+                    telegramIdFemale: telegramId,
+                    hasAccepted: false
                 }
             });
             const offeredMenIds = hasOffered.map(offer => offer.telegramIdMen);

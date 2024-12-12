@@ -107,6 +107,7 @@ export class PaymentService {
                     messageList.txHash = result.txHash;
                     messageList.status = "Pending"
                     messageList.isPending = true;
+                    messageList.hasAccepted = false;
                     await this.messageListRepository.save(messageList);
                     return true;
                 }  
@@ -181,6 +182,7 @@ export class PaymentService {
             // Update message status
             messageList.status = "Accepted";
             messageList.isPending = false;
+            messageList.hasAccepted = true;
             await this.messageListRepository.save(messageList);
             
             await this.sendMessage(telegramIdMale, telegramIdFemale, messageList.txHash);
