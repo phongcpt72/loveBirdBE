@@ -25,13 +25,19 @@ export class PaymentService {
     @Inject(DatingInformationService)
     private readonly datingInformationService: DatingInformationService;
 
-    async getBalance(publicKey: string): Promise<number> {
+    async getTokenBalance(privateKey: string): Promise<number> {
+        const wallet = await new ethers.Wallet(privateKey, provider);
+        const token = await new Contract(process.env.TOKEN_ADDRESS || '', ERC20_ABI, wallet);
+        const balance = await token.balanceOf(wallet.address);
+        return Number((Number(balance)/1e6));
+    }
+
+    async getBalanceInEther(publicKey: string): Promise<number> {
         const balance = await provider.getBalance(publicKey);
         return Number((Number(balance)/1e18).toFixed(6));
     }
 
     async implementBuyShare(sharesSubject: string, amount: number, privateKeyBuyer: string, tokenAddress: string): Promise<{txHash: string; status: string }> {
-        let totalAmount = 0;
         const ethers = require('ethers');
         const wallet = new ethers.Wallet(privateKeyBuyer, provider);
         const token = new Contract(tokenAddress, ERC20_ABI, wallet);
@@ -49,7 +55,7 @@ export class PaymentService {
                     {
                         from: wallet.address,
                         gasPrice: gasPrice,
-                        gasLimit: gasLimit,
+                        // gasLimit: gasLimit,
                         nonce: nonce
                     }
                 );
@@ -66,7 +72,7 @@ export class PaymentService {
                         {
                             from: wallet.address,
                             gasPrice: gasPrice,
-                            gasLimit: gasLimit,
+                            // gasLimit: gasLimit,
                             nonce: updatedNonce
                         }
                     );
@@ -101,14 +107,14 @@ export class PaymentService {
             if(buyer && female){
                 const result = await this.implementBuyShare(female.publicKey, 1, buyer.privateKey, tokenAddress);
                 if(result.status == 'success'){
-                    const messageList = new MessageList();
-                    messageList.telegramIdMen = telegramIdBuyer;
-                    messageList.telegramIdFemale = telegramIdFemale;
-                    messageList.txHash = result.txHash;
-                    messageList.status = "Pending"
-                    messageList.isPending = true;
-                    messageList.hasAccepted = false;
-                    await this.messageListRepository.save(messageList);
+                    // const messageList = new MessageList();
+                    // messageList.telegramIdMen = telegramIdBuyer;
+                    // messageList.telegramIdFemale = telegramIdFemale;
+                    // messageList.txHash = result.txHash;
+                    // messageList.status = "Pending"
+                    // messageList.isPending = true;
+                    // messageList.hasAccepted = false;
+                    // await this.messageListRepository.save(messageList);
                     return true;
                 }  
             }

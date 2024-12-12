@@ -23,4 +23,6 @@ export class GetFemaleUserList {
     hasOffered!: boolean;
     @Property()
     hasLiked!: boolean;
+    @Property()
+    hasAccepted!: boolean;
 }

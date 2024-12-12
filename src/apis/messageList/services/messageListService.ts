@@ -50,9 +50,10 @@ export class MessageListService {
             const result = await this.telegramUserService.getUserNameAndAvatar(userIds);
     
             const txHashs = await this.getGroupChatLinkByTxHash(telegramId, userIds);
-    
+            console.log(txHashs);
             const chatURLs = await this.getGroupChatLink(txHashs);
-    
+            console.log(chatURLs);
+            
             const userMessagesList: GetMessagesList[] = await Promise.all(users.map(async (user, index) => {
                 const telegramIdMale = gender === 'M' ? telegramId : user.telegramIdMen;
                 const telegramIdFemale = gender === 'M' ? user.telegramIdFemale : telegramId;

@@ -110,15 +110,14 @@ export class TelegramUserService {
             }
 
             const user = await this.telegramUserRepository.findOne({
-                select: ["userName", "gender", "age", "avatar","publicKey"],
+                select: ["userName", "gender", "age", "avatar","publicKey","privateKey"],
                 where: { telegramId }
             });
 
             if (user) {
-                const { userName: username, gender, age, avatar, publicKey } = user;
-                const balance = await this.paymentService.getBalance(publicKey);
-                console.log(user);
-                console.log(balance);
+                const { userName: username, gender, age, avatar, publicKey, privateKey } = user;
+                // const balance = await this.paymentService.getBalanceInEther(publicKey);
+                const balance = await this.paymentService.getTokenBalance(user.privateKey);
                 return { telegramId, username, gender, age, avatar, publicKey, balance: balance.toString() };
             }
             
@@ -240,7 +239,8 @@ export class TelegramUserService {
                             address: datingInfo?.address || '',
                             datingTime: datingInfo?.datingTime || 0,
                             hasLiked: currentUser.likedUsers?.includes(`${user.telegramId}`) || false,
-                            hasOffered: offeredMenIds.includes(user.telegramId)
+                            hasOffered: offeredMenIds.includes(user.telegramId),
+                            hasAccepted: acceptedMenIds.includes(user.telegramId)
                         };
                     })
             );
