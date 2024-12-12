@@ -25,25 +25,39 @@ export class TelegramUserService {
     private readonly datingInformationService: DatingInformationService;
 
     async createTelegramUser(telegramId: number, gender: string, username: string, age: number): Promise<boolean> {   
-        const entity = new TelegramUser();
-        const wallet = await this.createWallet();
-        // Map properties from the request DTO to the entity
-        entity.telegramId = telegramId;
-        entity.gender = gender;
-        entity.userName = username;
-        entity.age = age;
-        entity.publicKey = wallet.publicKey;
-        entity.privateKey = wallet.privateKey;
-        entity.likedUsers = [];
+        // Get the QueryRunner from the repository's manager
+        const queryRunner = this.telegramUserRepository.manager.connection.createQueryRunner();
+        
+        // Start transaction
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
         
         try {
-            // Save the entity to the database
-            await this.telegramUserRepository.save(entity);
+            const entity = new TelegramUser();
+            const wallet = await this.createWallet();
+            
+            entity.telegramId = telegramId;
+            entity.gender = gender;
+            entity.userName = username;
+            entity.age = age;
+            entity.publicKey = wallet.publicKey;
+            entity.privateKey = wallet.privateKey;
+            entity.likedUsers = [];
+            
+            // Save using the queryRunner manager
+            await queryRunner.manager.save(entity);
+            
+            // Commit the transaction
+            await queryRunner.commitTransaction();
             return true;
         } catch (error) {
-            // Log the error if necessary
+            // Rollback the transaction on error
+            await queryRunner.rollbackTransaction();
             console.error("Failed to save Telegram user:", error);
             return false;
+        } finally {
+            // Release the queryRunner
+            await queryRunner.release();
         }
     }
 
@@ -219,17 +233,46 @@ export class TelegramUserService {
     }
 
     async likeUser(telegramId: number, likedTelegramId: number): Promise<boolean> {
-        const user = await this.telegramUserRepository.findOne({ where: { telegramId } });
-        if (!user) {
-            return false;
-        }
+        // Get the QueryRunner from the repository's manager
+        const queryRunner = this.telegramUserRepository.manager.connection.createQueryRunner();
         
-        if (!user.likedUsers) {
-            user.likedUsers = [];
+        // Start transaction
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        
+        try {   
+            const user = await queryRunner.manager.findOne(TelegramUser, { 
+                where: { telegramId } 
+            });
+            
+            if (!user) {
+                return false;
+            }
+            
+            if (!user.likedUsers) {
+                user.likedUsers = [];
+            }
+
+            // Check if user has already liked this telegramId
+            if (user.likedUsers.includes(likedTelegramId.toString())) {
+                return false;
+            }
+
+            user.likedUsers.push(likedTelegramId.toString());
+            await queryRunner.manager.save(user);
+            
+            // Commit the transaction
+            await queryRunner.commitTransaction();
+            return true;
+        } catch (error) {
+            // Rollback the transaction on error
+            await queryRunner.rollbackTransaction();
+            console.error("Error liking user:", error);
+            return false;
+        } finally {
+            // Release the queryRunner
+            await queryRunner.release();
         }
-        user.likedUsers.push(likedTelegramId.toString());
-        await this.telegramUserRepository.save(user);
-        return true;
     }
 
 }

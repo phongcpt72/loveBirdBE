@@ -60,9 +60,15 @@ export class TelegramUserController {
     @Returns(200, Boolean)
     async likeUser(
         @BodyParams("telegramId") telegramId: number,
-        @BodyParams("likedTelegramId") likedTelegramId: number
-    ): Promise<boolean> {
-        return await this.telegramUserService.likeUser(telegramId, likedTelegramId);
+        @BodyParams("likedTelegramId") likedTelegramId: number,
+        @Res() res: Res
+    ): Promise<void> {
+      const result= await this.telegramUserService.likeUser(telegramId, likedTelegramId);
+      if (result) {
+        res.status(200).send({ message: 'User liked successfully' });
+      } else {
+        res.status(400).send({ message: 'User liked before' });
+      }
     }
 
 }
