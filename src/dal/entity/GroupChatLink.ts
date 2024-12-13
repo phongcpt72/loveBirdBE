@@ -19,6 +19,14 @@ export class GroupChatLink {
   @Property()
   isUsed: boolean;
 
+  @Column({ nullable: true })
+  @Property()
+  telegramIdMale: number;
+
+  @Column({ nullable: true })
+  @Property()
+  telegramIdFemale: number;
+
   @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
   public created_at: Date;
 

@@ -105,6 +105,7 @@ export class TelegramUserService {
         balance: string | null;
     } | null> {
         try {
+            console.log(`getTelegramUser ${telegramId}`);
             if (telegramId === undefined) {
                 return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null, balance: null };
             }
@@ -130,13 +131,13 @@ export class TelegramUserService {
 
     async filterUserList(telegramId: number, gender: string): Promise<{ telegramIdFilter: number[] }> {
         const users = await this.messageListRepository.find({
-            select: [gender === 'F' ? "telegramIdMen" : "telegramIdFemale"],
+            select: [gender === 'F' ? "telegramIdMale" : "telegramIdFemale"],
             where: {
-                [gender === 'F' ? "telegramIdFemale" : "telegramIdMen"]: telegramId
+                [gender === 'F' ? "telegramIdFemale" : "telegramIdMale"]: telegramId
             }
         });
         const telegramIds = users.map(user => 
-            gender === 'F' ? user.telegramIdMen : user.telegramIdFemale
+            gender === 'F' ? user.telegramIdMale : user.telegramIdFemale
         );
         return { telegramIdFilter: telegramIds };
     }
@@ -204,22 +205,22 @@ export class TelegramUserService {
             });
             
             const hasOffered = await this.messageListRepository.find({
-                select: ["telegramIdMen"],
+                select: ["telegramIdMale"],
                 where: {
                     telegramIdFemale: telegramId,
                 }
             });
 
             const hasAccepted = await this.messageListRepository.find({
-                select: ["telegramIdMen"],
+                select: ["telegramIdMale"],
                 where: {
                     telegramIdFemale: telegramId,
                     hasAccepted: true
                 }
             });
 
-            const offeredMenIds = hasOffered.map(offer => offer.telegramIdMen);
-            const acceptedMenIds = hasAccepted.map(accept => accept.telegramIdMen);
+            const offeredMenIds = hasOffered.map(offer => offer.telegramIdMale);
+            const acceptedMenIds = hasAccepted.map(accept => accept.telegramIdMale);
             console.log(offeredMenIds);
 
 

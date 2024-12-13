@@ -108,7 +108,7 @@ export class PaymentService {
                 const result = await this.implementBuyShare(female.publicKey, 1, buyer.privateKey, tokenAddress);
                 if(result.status == 'success'){
                     const messageList = new MessageList();
-                    messageList.telegramIdMen = telegramIdBuyer;
+                    messageList.telegramIdMale = telegramIdBuyer;
                     messageList.telegramIdFemale = telegramIdFemale;
                     messageList.txHash = result.txHash;
                     messageList.status = "Pending"
@@ -174,7 +174,7 @@ export class PaymentService {
             // Find pending message with better error logging
             const messageList = await this.messageListRepository.findOne({
                 where: { 
-                    telegramIdMen: telegramIdMale,
+                    telegramIdMale: telegramIdMale,
                     telegramIdFemale: telegramIdFemale,
                     isPending: true
                 }

@@ -9,7 +9,7 @@ export class MessageList {
 
   @Column({ nullable: true })
   @Property()
-  telegramIdMen: number;
+  telegramIdMale: number;
 
   @Column({ nullable: true })
   @Property()

@@ -34,12 +34,12 @@ export class MessageListService {
             if (gender === 'M') {
                 users = await this.messageListRepository.find({
                     select: ["telegramIdFemale", "status", "isPending"],
-                    where: { telegramIdMen: telegramId },
+                    where: { telegramIdMale: telegramId },
                     order: { created_at: "DESC" }
                 });
             } else if (gender === 'F') {
                 users = await this.messageListRepository.find({
-                    select: ["telegramIdMen", "status", "isPending"],
+                    select: ["telegramIdMale", "status", "isPending"],
                     where: { telegramIdFemale: telegramId },
                     order: { created_at: "DESC" }
                 });
@@ -47,7 +47,7 @@ export class MessageListService {
                 return [];
             }
     
-            const userIds = users.map(user => gender === 'M' ? user.telegramIdFemale : user.telegramIdMen);
+            const userIds = users.map(user => gender === 'M' ? user.telegramIdFemale : user.telegramIdMale);
             const result = await this.telegramUserService.getUserNameAndAvatar(userIds);
     
             const txHashs = await this.getGroupChatLinkByTxHash(telegramId, userIds);
@@ -56,7 +56,7 @@ export class MessageListService {
             console.log(chatURLs);
 
             const userMessagesList: GetMessagesList[] = await Promise.all(users.map(async (user, index) => {
-                const telegramIdMale = gender === 'M' ? telegramId : user.telegramIdMen;
+                const telegramIdMale = gender === 'M' ? telegramId : user.telegramIdMale;
                 const telegramIdFemale = gender === 'M' ? user.telegramIdFemale : telegramId;
                 
                 const datingInfo = await this.datingInformationService.getDateAndLocation(telegramIdMale, telegramIdFemale);
@@ -89,7 +89,7 @@ export class MessageListService {
             }
             const users = await this.messageListRepository.find({
                 select: ["telegramIdFemale", "status", "isPending"],
-                where: { telegramIdMen: telegramId },
+                where: { telegramIdMale: telegramId },
                 order: { created_at: "DESC" }
             });
 
@@ -134,12 +134,12 @@ export class MessageListService {
                 return [];
             }
             const users = await this.messageListRepository.find({
-                select: ["telegramIdMen", "status", "isPending"],
+                select: ["telegramIdMale", "status", "isPending"],
                 where: { telegramIdFemale: telegramId },
                 order: { created_at: "DESC" }
             });
 
-            const userIds = users.map(user => user.telegramIdMen);
+            const userIds = users.map(user => user.telegramIdMale);
             console.log(userIds);
             const result = await this.telegramUserService.getUserNameAndAvatar(userIds);
 
@@ -150,9 +150,9 @@ export class MessageListService {
             console.log(chatURLs);
 
             const userMessagesList: GetMessagesList[] = await Promise.all(users.map(async (user, index) => {
-                const datingInfo = await this.datingInformationService.getDateAndLocation(telegramId, user.telegramIdMen);
+                const datingInfo = await this.datingInformationService.getDateAndLocation(telegramId, user.telegramIdMale);
                 return {
-                    telegramIdMale: user.telegramIdMen,
+                    telegramIdMale: user.telegramIdMale,
                     telegramIdFemale: telegramId,
                     username: result[index]?.userName || '',
                     avatarFemale: result[index]?.avatar || '',
@@ -186,7 +186,7 @@ export class MessageListService {
     async getGroupChatLinkByTxHash(telegramIdMale: number, telegramIdFemale: number[]): Promise<string[]> {
         const result = await this.messageListRepository.find({
             select: ["txHash"],
-            where: { telegramIdMen: telegramIdMale, telegramIdFemale: In(telegramIdFemale) }
+            where: { telegramIdMale: telegramIdMale, telegramIdFemale: In(telegramIdFemale) }
         });
         return result.map(msg => msg.txHash);
     }
@@ -194,7 +194,7 @@ export class MessageListService {
     async getGroupChatLinkByTxHashFemale(telegramIdFemale: number, telegramIdMale: number[]): Promise<string[]> {
         const result = await this.messageListRepository.find({
             select: ["txHash"],
-            where: { telegramIdFemale: telegramIdFemale, telegramIdMen: In(telegramIdMale) }
+            where: { telegramIdFemale: telegramIdFemale, telegramIdMale: In(telegramIdMale) }
         });
         return result.map(msg => msg.txHash);
     }
