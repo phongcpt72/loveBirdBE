@@ -88,8 +88,45 @@ export class PaymentService {
         }
     }
 
+    // async buyShare(telegramIdBuyer: number, telegramIdFemale: number, tokenAddress: string): Promise<boolean> {
+    //     try {
+    //         if (telegramIdBuyer === undefined && telegramIdFemale === undefined) {
+    //             return false;
+    //         }
+    //         const buyer = await this.telegramUserRepository.findOne({
+    //             select: ["privateKey"],
+    //             where: { telegramId: telegramIdBuyer }
+    //         });
+
+    //         const female = await this.telegramUserRepository.findOne({
+    //             select: ["publicKey"],
+    //             where: { telegramId: telegramIdFemale }
+    //         });
+
+
+    //         if(buyer && female){
+    //             const result = await this.implementBuyShare(female.publicKey, 1, buyer.privateKey, tokenAddress);
+    //             if(result.status == 'success'){
+    //                 const messageList = new MessageList();
+    //                 messageList.telegramIdMale = telegramIdBuyer;
+    //                 messageList.telegramIdFemale = telegramIdFemale;
+    //                 messageList.txHash = result.txHash || '';
+    //                 messageList.status = "Pending"
+    //                 messageList.isPending = true;
+    //                 messageList.hasAccepted = false;
+    //                 await this.messageListRepository.save(messageList);
+    //                 return true;
+    //             }  
+    //         }
+    //         return false;
+            
+    //     } catch (error) {
+    //         console.error('Error buying share:', error);
+    //         return false;
+    //     }
+    // }
+
     async buyShare(telegramIdBuyer: number, telegramIdFemale: number, tokenAddress: string): Promise<boolean> {
-        try {
             if (telegramIdBuyer === undefined && telegramIdFemale === undefined) {
                 return false;
             }
@@ -102,28 +139,20 @@ export class PaymentService {
                 select: ["publicKey"],
                 where: { telegramId: telegramIdFemale }
             });
-
-
-            if(buyer && female){
+            if(female && buyer){
                 const result = await this.implementBuyShare(female.publicKey, 1, buyer.privateKey, tokenAddress);
-                if(result.status == 'success'){
-                    const messageList = new MessageList();
-                    messageList.telegramIdMale = telegramIdBuyer;
-                    messageList.telegramIdFemale = telegramIdFemale;
-                    messageList.txHash = result.txHash;
-                    messageList.status = "Pending"
-                    messageList.isPending = true;
-                    messageList.hasAccepted = false;
-                    await this.messageListRepository.save(messageList);
-                    return true;
-                }  
-            }
-            return false;
+                
+                const messageList = new MessageList();
+                messageList.telegramIdMale = telegramIdBuyer;
+                messageList.telegramIdFemale = telegramIdFemale;
+                messageList.txHash = result.txHash || '';
+                messageList.status = "Pending"
+                messageList.isPending = true;
+                messageList.hasAccepted = false;
+                await this.messageListRepository.save(messageList);
+            }   
+            return true;
             
-        } catch (error) {
-            console.error('Error buying share:', error);
-            return false;
-        }
     }
 
     async checkTransactionStatus(txHash: string): Promise<string> {
@@ -212,7 +241,7 @@ export class PaymentService {
                     where: { telegramId: telegramIdMale }
                 })
             ]);
-            const groupLink = await this.groupChatService.getGroupChatLink(txHash);
+            const groupLink = await this.groupChatService.getGroupChatLink(txHash,telegramIdMale,telegramIdFemale);
             if (groupLink) {
                 try{
                     await this.groupChatService.changeGroupName(

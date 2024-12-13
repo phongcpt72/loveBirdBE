@@ -38,7 +38,7 @@ export class GroupChatService {
         return true;
     }
 
-    async getGroupChatLink(txHash: string): Promise<string | null> {
+    async getGroupChatLink(txHash: string,telegramIdMale: number,telegramIdFemale: number): Promise<string | null> {
         const result = await this.groupChatLinkRepository.findOne({
             select: ["link"],
             where: { isUsed: false },
@@ -46,7 +46,7 @@ export class GroupChatService {
         if (result) {
             await this.groupChatLinkRepository.update(
                 { link: result.link },
-                { isUsed: true, txHash: txHash }
+                { isUsed: true, txHash: txHash,telegramIdMale: telegramIdMale,telegramIdFemale: telegramIdFemale }
                 
             ); 
         }
@@ -72,8 +72,12 @@ export class GroupChatService {
             } else {
                 console.error('Failed to update chat title:', response.data.description);
             }
-        } catch (error) {
-            console.error('Error occurred while updating chat title:', error);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                console.error('Error occurred while updating chat title:', error.message);
+            } else {
+                console.error('Unexpected error:', error);
+            }
         }
         return true;
     }
