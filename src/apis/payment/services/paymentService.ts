@@ -107,14 +107,14 @@ export class PaymentService {
             if(buyer && female){
                 const result = await this.implementBuyShare(female.publicKey, 1, buyer.privateKey, tokenAddress);
                 if(result.status == 'success'){
-                    // const messageList = new MessageList();
-                    // messageList.telegramIdMen = telegramIdBuyer;
-                    // messageList.telegramIdFemale = telegramIdFemale;
-                    // messageList.txHash = result.txHash;
-                    // messageList.status = "Pending"
-                    // messageList.isPending = true;
-                    // messageList.hasAccepted = false;
-                    // await this.messageListRepository.save(messageList);
+                    const messageList = new MessageList();
+                    messageList.telegramIdMen = telegramIdBuyer;
+                    messageList.telegramIdFemale = telegramIdFemale;
+                    messageList.txHash = result.txHash;
+                    messageList.status = "Pending"
+                    messageList.isPending = true;
+                    messageList.hasAccepted = false;
+                    await this.messageListRepository.save(messageList);
                     return true;
                 }  
             }
