@@ -118,7 +118,8 @@ export class TelegramUserService {
             if (user) {
                 const { userName: username, gender, age, avatar, publicKey, privateKey } = user;
                 // const balance = await this.paymentService.getBalanceInEther(publicKey);
-                const balance = await this.paymentService.getTokenBalance(user.privateKey);
+                // const balance = await this.paymentService.getTokenBalance(user.privateKey);
+                const balance = "0";
                 return { telegramId, username, gender, age, avatar, publicKey, balance: balance.toString() };
             }
             
