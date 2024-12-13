@@ -32,6 +32,18 @@ export class MessageListController {
         return await this.groupChatService.createGroupChatLink(linkArray);
     }
 
+    @Get("/get-message-list-male")
+    @Summary("Get message list male")
+    async getMessageListMale(@QueryParams("telegramId") telegramId: number): Promise<GetMessagesList[]> {
+        return await this.messageListService.getMessageListMale(telegramId);
+    }
+
+    @Get("/get-message-list-female")
+    @Summary("Get message list female")
+    async getMessageListFemale(@QueryParams("telegramId") telegramId: number): Promise<GetMessagesList[]> {
+        return await this.messageListService.getMessageListFemale(telegramId);
+    }
+
     // @Post("/create-group-invite-link")
     // @Summary("Create group invite links")
     // @Returns(200, String)

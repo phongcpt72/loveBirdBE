@@ -20,10 +20,8 @@ export class MessageListService {
     @Inject()
     private readonly datingInformationService: DatingInformationService;
 
-
     async getMessagesList(telegramId: number): Promise<GetMessagesList[]> {
         try {
-            this.getMessageListFemale(telegramId);
             if (telegramId === undefined) {
                 return [];
             }
@@ -150,7 +148,7 @@ export class MessageListService {
             console.log(chatURLs);
 
             const userMessagesList: GetMessagesList[] = await Promise.all(users.map(async (user, index) => {
-                const datingInfo = await this.datingInformationService.getDateAndLocation(telegramId, user.telegramIdMale);
+                const datingInfo = await this.datingInformationService.getDateAndLocation(user.telegramIdMale, telegramId);
                 return {
                     telegramIdMale: user.telegramIdMale,
                     telegramIdFemale: telegramId,
@@ -173,7 +171,6 @@ export class MessageListService {
             return [];
         }
     }
-
 
     async getGroupChatLink(txHash: string[]): Promise<string[]> {
         const result = await this.groupChatLinkRepository.find({
