@@ -25,4 +25,16 @@ export class GetFemaleUserList {
     hasLiked!: boolean;
     @Property()
     hasAccepted!: boolean;
+    @Property()
+    place!: string;
+    @Property()
+    numLikes!: number;
+    @Property()
+    salary!: number;
+    @Property()
+    workingPlace!: string;
+    @Property()
+    relationshipType!: string;
+    @Property()
+    bio!: string;
 }

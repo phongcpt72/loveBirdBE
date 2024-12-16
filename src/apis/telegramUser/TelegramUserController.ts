@@ -71,4 +71,20 @@ export class TelegramUserController {
       }
     }
 
+    @Post("/unlike-user")
+    @Summary("Unlike a user")
+    @Returns(200, Boolean)
+    async unlikeUser(
+        @BodyParams("telegramId") telegramId: number,
+        @BodyParams("unlikedTelegramId") unlikedTelegramId: number,
+        @Res() res: Res
+    ): Promise<void> {
+        const result = await this.telegramUserService.unlikeUser(telegramId, unlikedTelegramId);
+        if (result) {
+            res.status(200).send({ message: 'User unliked successfully' });
+        } else {
+            res.status(400).send({ message: 'User unliked before' });
+        }
+    }
+
 }

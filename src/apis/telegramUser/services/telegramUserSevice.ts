@@ -48,7 +48,12 @@ export class TelegramUserService {
             entity.publicKey = wallet.publicKey;
             entity.privateKey = wallet.privateKey;
             entity.likedUsers = [];
-            
+            entity.place = "";
+            entity.numLikes = 0;
+            entity.salary = 0;
+            entity.workingPlace = "";
+            entity.relationshipType = "";
+            entity.bio = "";
             // Save using the queryRunner manager
             await queryRunner.manager.save(entity);
             
@@ -103,30 +108,31 @@ export class TelegramUserService {
         avatar: string | null;
         publicKey: string | null;
         balance: string | null;
+        videos: string | null;
     } | null> {
         try {
             console.log(`getTelegramUser ${telegramId}`);
             if (telegramId === undefined) {
-                return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null, balance: null };
+                return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null, balance: null, videos: null };
             }
 
             const user = await this.telegramUserRepository.findOne({
-                select: ["userName", "gender", "age", "avatar","publicKey","privateKey"],
+                select: ["userName", "gender", "age", "avatar","publicKey","privateKey","videos"],
                 where: { telegramId }
             });
 
             if (user) {
-                const { userName: username, gender, age, avatar, publicKey, privateKey } = user;
+                const { userName: username, gender, age, avatar, publicKey, privateKey ,videos} = user;
                 // const balance = await this.paymentService.getBalanceInEther(publicKey);
                 // const balance = await this.paymentService.getTokenBalance(user.privateKey);
                 const balance = "0";
-                return { telegramId, username, gender, age, avatar, publicKey, balance: balance.toString() };
+                return { telegramId, username, gender, age, avatar, publicKey, balance: balance.toString(), videos: videos || null };
             }
             
-            return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null, balance: null };
+            return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null, balance: null, videos: null };
         } catch (error) {
             console.error("Error retrieving Telegram user information:", error);
-            return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null, balance: null };
+            return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null, balance: null, videos: null };
         }
     }
 
@@ -173,13 +179,13 @@ export class TelegramUserService {
                 age: user.age,
                 avatar: user.avatar,
                 videos: user.videos,
-                hasLiked: user.likedUsers?.includes(`${currentUser.telegramId}`) || false
+                hasLiked: user.likedUsers?.includes(currentUser.telegramId.toString()) || false
             }));
     
             // Sort users who liked the current user to the beginning
             return userList.sort((a, b) => {
-                const aLikedMe = allFemaleUsers.find(u => u.telegramId === a.telegramId)?.likedUsers?.includes(`${telegramId}`) ? 1 : 0;
-                const bLikedMe = allFemaleUsers.find(u => u.telegramId === b.telegramId)?.likedUsers?.includes(`${telegramId}`) ? 1 : 0;
+                const aLikedMe = allFemaleUsers.find(u => u.telegramId === a.telegramId)?.likedUsers?.includes(currentUser.telegramId.toString()) ? 1 : 0;
+                const bLikedMe = allFemaleUsers.find(u => u.telegramId === b.telegramId)?.likedUsers?.includes(currentUser.telegramId.toString()) ? 1 : 0;
                 return bLikedMe - aLikedMe;
             });
     
@@ -289,9 +295,15 @@ export class TelegramUserService {
                             title: datingInfo?.title || '',
                             address: datingInfo?.address || '',
                             datingTime: datingInfo?.datingTime || 0,
-                            hasLiked: currentUser.likedUsers?.includes(`${user.telegramId}`) || false,
+                            hasLiked: currentUser.likedUsers?.includes(user.telegramId.toString()) || false,
                             hasOffered: offeredMenIds.includes(user.telegramId),
-                            hasAccepted: acceptedMenIds.includes(user.telegramId)
+                            hasAccepted: acceptedMenIds.includes(user.telegramId),
+                            place: user.place,
+                            numLikes: user.numLikes,
+                            salary: user.salary,
+                            workingPlace: user.workingPlace,
+                            relationshipType: user.relationshipType,
+                            bio: user.bio
                         };
                     })
             );
@@ -316,8 +328,12 @@ export class TelegramUserService {
             const user = await queryRunner.manager.findOne(TelegramUser, { 
                 where: { telegramId } 
             });
+
+            const likedUser = await queryRunner.manager.findOne(TelegramUser, { 
+                where: { telegramId: likedTelegramId } 
+            });
             
-            if (!user) {
+            if (!user || !likedUser) {
                 return false;
             }
             
@@ -331,8 +347,9 @@ export class TelegramUserService {
             }
 
             user.likedUsers.push(likedTelegramId.toString());
+            likedUser.numLikes += 1;
             await queryRunner.manager.save(user);
-            
+            await queryRunner.manager.save(likedUser);
             // Commit the transaction
             await queryRunner.commitTransaction();
             return true;
@@ -347,4 +364,42 @@ export class TelegramUserService {
         }
     }
 
+    async unlikeUser(telegramId: number, unlikedTelegramId: number): Promise<boolean> {
+        if (unlikedTelegramId === undefined || unlikedTelegramId === null) {
+            console.error("Invalid unlikedTelegramId");
+            return false;
+        }
+
+        const queryRunner = this.telegramUserRepository.manager.connection.createQueryRunner();
+        
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+        
+        try {
+            const user = await queryRunner.manager.findOne(TelegramUser, { where: { telegramId } });
+            const unlikedUser = await queryRunner.manager.findOne(TelegramUser, { where: { telegramId: unlikedTelegramId } });
+
+            if (!user || !unlikedUser) {
+                return false;
+            }
+            
+            // Ensure likedUsers is initialized
+            user.likedUsers = user.likedUsers || [];
+            
+            // Remove unlikedTelegramId from likedUsers array
+            user.likedUsers = user.likedUsers.filter(id => id !== unlikedTelegramId.toString());
+            
+            unlikedUser.numLikes -= 1;
+            await queryRunner.manager.save(user);
+            await queryRunner.manager.save(unlikedUser);
+            await queryRunner.commitTransaction();
+            return true;
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            console.error("Error unliking user:", error);
+            return false;
+        } finally {
+            await queryRunner.release();
+        }
+    }
 }

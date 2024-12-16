@@ -47,6 +47,30 @@ export class TelegramUser {
   @Column("simple-array", { nullable: true })
   likedUsers: string[];
 
+  @Column({ nullable: true })
+  @Property()
+  place: string;
+
+  @Column({ nullable: true })
+  @Property()
+  numLikes: number;
+
+  @Column({ nullable: true })
+  @Property()
+  salary: number;
+
+  @Column({ nullable: true })
+  @Property()
+  workingPlace: string;
+
+  @Column({ nullable: true })
+  @Property()
+  relationshipType: string;
+
+  @Column({ nullable: true })
+  @Property()
+  bio: string;
+
   @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
   public created_at: Date;
 
