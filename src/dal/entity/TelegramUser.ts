@@ -12,7 +12,7 @@ export class TelegramUser {
   @Required()
   userName: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'bigint', nullable: true })
   @Property()
   telegramId: number;
 
