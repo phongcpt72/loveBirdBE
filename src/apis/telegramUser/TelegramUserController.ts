@@ -22,8 +22,8 @@ export class TelegramUserController {
     @Res() res: Res
   ): Promise<void> {
     try {
-      const { telegramId, gender, username, age } = body;
-      const result = await this.telegramUserService.createTelegramUser(telegramId, gender, username, age);
+      const { telegramId, gender, username, age, avatarPublicId, avatar } = body;
+      const result = await this.telegramUserService.createTelegramUser(telegramId, gender, username, age, avatarPublicId, avatar);
       console.log(result);
       if (result) {
         res.status(201).send({ message: 'User created successfully' });

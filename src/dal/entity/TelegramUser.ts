@@ -67,6 +67,10 @@ export class TelegramUser {
   @Property()
   bio: string;
 
+  @Column({ nullable: true })
+  @Property()
+  avatarPublicId: string;
+
   @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
   public created_at: Date;
 

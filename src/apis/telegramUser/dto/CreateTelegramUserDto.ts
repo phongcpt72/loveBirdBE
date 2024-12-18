@@ -9,4 +9,8 @@ export class CreateTelegramUserDto {
     username!: string;
     @Required()
     age!: number;
+    @Required()
+    avatarPublicId!: string;    
+    @Required()
+    avatar!: string;
 }

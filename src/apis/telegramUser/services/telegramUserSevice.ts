@@ -24,7 +24,7 @@ export class TelegramUserService {
     @Inject(DatingInformationService)
     private readonly datingInformationService: DatingInformationService;
 
-    async createTelegramUser(telegramId: string, gender: string, username: string, age: number): Promise<boolean> {   
+    async createTelegramUser(telegramId: string, gender: string, username: string, age: number, avatarPublicId: string, avatar: string): Promise<boolean> {   
         
         try {
             const currentUser = await this.telegramUserRepository.findOne({ where: { telegramId } });
@@ -41,6 +41,8 @@ export class TelegramUserService {
             entity.age = age;
             entity.publicKey = wallet.publicKey;
             entity.privateKey = wallet.privateKey;
+            entity.avatarPublicId = avatarPublicId;
+            entity.avatar = avatar;
             entity.likedUsers = [];
             entity.place = "Vietnam";
             entity.numLikes = 0;
