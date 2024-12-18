@@ -15,7 +15,7 @@ export class MessageListController {
     private readonly groupChatService: GroupChatService;
 
     @Get("/get-messages-list")
-    async getMessagesList(@QueryParams("telegramId") telegramId: number): Promise<GetMessagesList[]> {
+    async getMessagesList(@QueryParams("telegramId") telegramId: string): Promise<GetMessagesList[]> {
         return await this.messageListService.getMessagesList(telegramId);
     }
 
@@ -34,13 +34,13 @@ export class MessageListController {
 
     @Get("/get-message-list-male")
     @Summary("Get message list male")
-    async getMessageListMale(@QueryParams("telegramId") telegramId: number): Promise<GetMessagesList[]> {
+    async getMessageListMale(@QueryParams("telegramId") telegramId: string): Promise<GetMessagesList[]> {
         return await this.messageListService.getMessageListMale(telegramId);
     }
 
     @Get("/get-message-list-female")
     @Summary("Get message list female")
-    async getMessageListFemale(@QueryParams("telegramId") telegramId: number): Promise<GetMessagesList[]> {
+    async getMessageListFemale(@QueryParams("telegramId") telegramId: string): Promise<GetMessagesList[]> {
         return await this.messageListService.getMessageListFemale(telegramId);
     }
 

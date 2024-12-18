@@ -9,11 +9,11 @@ export class DatingInformation {
 
   @Column({ nullable: true })
   @Property()
-  telegramIdMale: number;
+  telegramIdMale: string;
 
   @Column({ nullable: true })
   @Property()
-  telegramIdFemale: number;
+  telegramIdFemale: string;
 
   @Column({ nullable: true })
   @Property()

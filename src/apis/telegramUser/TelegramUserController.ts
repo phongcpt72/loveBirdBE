@@ -36,7 +36,7 @@ export class TelegramUserController {
   }
 
     @Get("/get-telegram-user")
-    async getTelegramUser(@QueryParams("telegramId") telegramId: number): Promise<{ telegramId: number | null; username: string | null; gender: string | null; age: number | null; avatar: string | null; publicKey: string | null; balance: string | null } | null> {
+    async getTelegramUser(@QueryParams("telegramId") telegramId: string): Promise<{ telegramId: string | null; username: string | null; gender: string | null; age: number | null; avatar: string | null; publicKey: string | null; balance: string | null } | null> {
         return await this.telegramUserService.getTelegramUser(telegramId);  
     }
 
@@ -44,14 +44,14 @@ export class TelegramUserController {
     @Get("/get-male-user-list")
     @Summary("Get a list of users of the opposite gender")
     @Returns(200, GetMaleUserList)
-    async getMaleUserList(@QueryParams("telegramId") telegramId: number): Promise<GetMaleUserList[]> {
+    async getMaleUserList(@QueryParams("telegramId") telegramId: string): Promise<GetMaleUserList[]> {
         return await this.telegramUserService.getMaleUserList(telegramId);
     }
 
     @Get("/get-female-user-list")
     @Summary("Get a list of users of the opposite gender")
     @Returns(200, GetFemaleUserList)
-    async getFemaleUserList(@QueryParams("telegramId") telegramId: number): Promise<GetFemaleUserList[]> {
+    async getFemaleUserList(@QueryParams("telegramId") telegramId: string): Promise<GetFemaleUserList[]> {
         return await this.telegramUserService.getFemaleUserList(telegramId);
     }
 
@@ -59,8 +59,8 @@ export class TelegramUserController {
     @Summary("Like a user")
     @Returns(200, Boolean)
     async likeUser(
-        @BodyParams("telegramId") telegramId: number,
-        @BodyParams("likedTelegramId") likedTelegramId: number,
+        @BodyParams("telegramId") telegramId: string,
+        @BodyParams("likedTelegramId") likedTelegramId: string,
         @Res() res: Res
     ): Promise<void> {
       const result= await this.telegramUserService.likeUser(telegramId, likedTelegramId);
@@ -75,8 +75,8 @@ export class TelegramUserController {
     @Summary("Unlike a user")
     @Returns(200, Boolean)
     async unlikeUser(
-        @BodyParams("telegramId") telegramId: number,
-        @BodyParams("unlikedTelegramId") unlikedTelegramId: number,
+        @BodyParams("telegramId") telegramId: string,
+        @BodyParams("unlikedTelegramId") unlikedTelegramId: string,
         @Res() res: Res
     ): Promise<void> {
         const result = await this.telegramUserService.unlikeUser(telegramId, unlikedTelegramId);

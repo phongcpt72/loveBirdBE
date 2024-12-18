@@ -38,7 +38,7 @@ export class GroupChatService {
         return true;
     }
 
-    async getGroupChatLink(txHash: string,telegramIdMale: number,telegramIdFemale: number): Promise<string | null> {
+    async getGroupChatLink(txHash: string,telegramIdMale: string,telegramIdFemale: string): Promise<string | null> {
         const result = await this.groupChatLinkRepository.findOne({
             select: ["link"],
             where: { isUsed: false },

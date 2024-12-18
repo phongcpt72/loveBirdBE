@@ -37,7 +37,7 @@ export class DatingInformationController {
   @Description("Updates has dated")
   @Returns(201, String)
   @Returns(400, String)
-  async updateHasDated(@BodyParams("telegramIdMale") telegramIdMale: number, @BodyParams("telegramIdFemale") telegramIdFemale: number,@Res() res: Res): Promise<void> {
+  async updateHasDated(@BodyParams("telegramIdMale") telegramIdMale: string, @BodyParams("telegramIdFemale") telegramIdFemale: string,@Res() res: Res): Promise<void> {
     try {
         const result = await this.datingInformationService.updateHasDated(telegramIdMale, telegramIdFemale);
         if (result) {

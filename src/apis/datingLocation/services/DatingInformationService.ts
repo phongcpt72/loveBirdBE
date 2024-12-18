@@ -44,7 +44,7 @@ export class DatingInformationService {
 
    }   
 
-    async getDateAndLocation(telegramIdMale: number, telegramIdFemale: number): Promise<{title: string,address :string,formattedDate: string, formattedTime: string,datingTime: number, hasDated: boolean} | null> {
+    async getDateAndLocation(telegramIdMale: string, telegramIdFemale: string): Promise<{title: string,address :string,formattedDate: string, formattedTime: string,datingTime: number, hasDated: boolean} | null> {
         try {
         const datingLocation = await this.datingInformationRepository.findOne({
             select: ["title","address", "datingTime","hasDated"],
@@ -97,7 +97,7 @@ export class DatingInformationService {
         return { formattedDate: formattedDateWithSuffix, formattedTime };
     }
 
-    async updateHasDated(telegramIdMale: number, telegramIdFemale: number): Promise<boolean> {
+    async updateHasDated(telegramIdMale: string, telegramIdFemale: string): Promise<boolean> {
         try {
             await this.datingInformationRepository.update({ telegramIdMale, telegramIdFemale }, { hasDated: true });
             return true;

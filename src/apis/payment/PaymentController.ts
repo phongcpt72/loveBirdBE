@@ -15,8 +15,8 @@ export class PaymentController {
     @Returns(201, String)
     @Returns(400, String)
     async buyShare(
-        @BodyParams("telegramIdBuyer") telegramIdBuyer: number,
-        @BodyParams("telegramIdFemale") telegramIdFemale: number,
+        @BodyParams("telegramIdBuyer") telegramIdBuyer: string,
+        @BodyParams("telegramIdFemale") telegramIdFemale: string,
         @BodyParams("tokenAddress") tokenAddress: string,
         @Res() res: Res
     ): Promise<void> {
@@ -48,8 +48,8 @@ export class PaymentController {
     @Returns(201, String)
     @Returns(400, String)
     async acceptOffer(
-        @BodyParams("telegramIdMale") telegramIdMale: number,
-        @BodyParams("telegramIdFemale") telegramIdFemale: number,
+        @BodyParams("telegramIdMale") telegramIdMale: string,
+        @BodyParams("telegramIdFemale") telegramIdFemale: string,
         @Res() res: Res
     ): Promise<void> {
         try {
@@ -70,8 +70,8 @@ export class PaymentController {
     @Summary("Send message")
     @Returns(201, String)
     async sendMessage(
-        @BodyParams("telegramIdFemale") telegramIdFemale: number,
-        @BodyParams("telegramIdMale") telegramIdMale: number,
+        @BodyParams("telegramIdFemale") telegramIdFemale: string,
+        @BodyParams("telegramIdMale") telegramIdMale: string,
         @BodyParams("txHash") txHash: string
     ): Promise<boolean> {
         return await this.paymentService.sendMessage(telegramIdFemale, telegramIdMale, txHash);

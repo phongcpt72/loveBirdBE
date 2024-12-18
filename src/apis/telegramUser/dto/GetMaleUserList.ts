@@ -2,7 +2,7 @@ import { Property, Required, MaxLength, MinLength } from "@tsed/schema";
 
 export class GetMaleUserList {
     @Property()
-    telegramId!: number;
+    telegramId!: string;
     @Property()
     username!: string;
     @Property()

@@ -12,9 +12,9 @@ export class TelegramUser {
   @Required()
   userName: string;
 
-  @Column({ type: 'bigint', nullable: true })
+  @Column({ nullable: true })
   @Property()
-  telegramId: number;
+  telegramId: string;
 
   @Column({ nullable: true })
   @Property()
@@ -31,10 +31,6 @@ export class TelegramUser {
   @Column({ nullable: true })
   @Property()
   privateKey: string;
-
-  @Column({ type: "json", nullable: true })
-  @Property()
-  images: string[];
 
   @Column({ nullable: true })
   @Property()

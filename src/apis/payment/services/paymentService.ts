@@ -126,7 +126,7 @@ export class PaymentService {
     //     }
     // }
 
-    async buyShare(telegramIdBuyer: number, telegramIdFemale: number, tokenAddress: string): Promise<boolean> {
+    async buyShare(telegramIdBuyer: string, telegramIdFemale: string, tokenAddress: string): Promise<boolean> {
             if (telegramIdBuyer === undefined && telegramIdFemale === undefined) {
                 return false;
             }
@@ -168,7 +168,7 @@ export class PaymentService {
         }
     }
 
-    async checkUser(telegramId: number): Promise<boolean> {
+    async checkUser(telegramId: string): Promise<boolean> {
         try {
             const user = await this.telegramUserRepository.findOne({
                 where: { telegramId: telegramId }
@@ -180,7 +180,7 @@ export class PaymentService {
         }
     }
 
-    async acceptOffer(telegramIdMale: number, telegramIdFemale: number): Promise<boolean> {
+    async acceptOffer(telegramIdMale: string, telegramIdFemale: string): Promise<boolean> {
         try {
             // Improve validation to check for actual numbers
             if (!telegramIdMale || !telegramIdFemale || 
@@ -229,7 +229,7 @@ export class PaymentService {
         }
     }
 
-    async sendMessage(telegramIdMale: number, telegramIdFemale: number, txHash: string): Promise<boolean> {
+    async sendMessage(telegramIdMale: string, telegramIdFemale: string, txHash: string): Promise<boolean> {
         try{
             const [userFemale, userMale] = await Promise.all([
                 this.telegramUserRepository.findOne({

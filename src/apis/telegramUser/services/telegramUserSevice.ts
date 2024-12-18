@@ -24,13 +24,7 @@ export class TelegramUserService {
     @Inject(DatingInformationService)
     private readonly datingInformationService: DatingInformationService;
 
-    async createTelegramUser(telegramId: number, gender: string, username: string, age: number): Promise<boolean> {   
-        // Get the QueryRunner from the repository's manager
-        const queryRunner = this.telegramUserRepository.manager.connection.createQueryRunner();
-        
-        // Start transaction
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
+    async createTelegramUser(telegramId: string, gender: string, username: string, age: number): Promise<boolean> {   
         
         try {
             const currentUser = await this.telegramUserRepository.findOne({ where: { telegramId } });
@@ -48,26 +42,18 @@ export class TelegramUserService {
             entity.publicKey = wallet.publicKey;
             entity.privateKey = wallet.privateKey;
             entity.likedUsers = [];
-            entity.place = "";
+            entity.place = "Vietnam";
             entity.numLikes = 0;
             entity.salary = 0;
             entity.workingPlace = "";
             entity.relationshipType = "";
             entity.bio = "";
             // Save using the queryRunner manager
-            await queryRunner.manager.save(entity);
-            
-            // Commit the transaction
-            await queryRunner.commitTransaction();
+            await this.telegramUserRepository.save(entity);
             return true;
         } catch (error) {
-            // Rollback the transaction on error
-            await queryRunner.rollbackTransaction();
             console.error("Failed to save Telegram user:", error);
             return false;
-        } finally {
-            // Release the queryRunner
-            await queryRunner.release();
         }
     }
 
@@ -81,12 +67,12 @@ export class TelegramUserService {
         return{privateKey,publicKey}
     }
 
-    async getGender(telegramId: number): Promise<string> {
+    async getGender(telegramId: string): Promise<string> {
         const user = await this.telegramUserRepository.findOne({ where: { telegramId } });
         return user?.gender || '';
     }
 
-    async getUserNameAndAvatar(telegramIds: number[]): Promise<Array<{ userName: string | null, avatar: string | null }>> {
+    async getUserNameAndAvatar(telegramIds: string[]): Promise<Array<{ userName: string | null, avatar: string | null }>> {
         const users = await this.telegramUserRepository.find({
             select: ["telegramId","userName", "avatar"],
             where: { telegramId: In(telegramIds) }
@@ -100,8 +86,8 @@ export class TelegramUserService {
         });
     }
 
-    async getTelegramUser(telegramId: number): Promise<{ 
-        telegramId: number | null;
+    async getTelegramUser(telegramId: string): Promise<{ 
+        telegramId: string | null;
         username: string | null; 
         gender: string | null; 
         age: number | null; 
@@ -136,7 +122,7 @@ export class TelegramUserService {
         }
     }
 
-    async filterUserList(telegramId: number, gender: string): Promise<{ telegramIdFilter: number[] }> {
+    async filterUserList(telegramId: string, gender: string): Promise<{ telegramIdFilter: string[] }> {
         const users = await this.messageListRepository.find({
             select: [gender === 'F' ? "telegramIdMale" : "telegramIdFemale"],
             where: {
@@ -149,14 +135,18 @@ export class TelegramUserService {
         return { telegramIdFilter: telegramIds };
     }
 
-    async getMaleUserList(telegramId: number): Promise<GetMaleUserList[]> {
+    async getMaleUserList(telegramId: string): Promise<GetMaleUserList[]> {
         try {
+
+            console.log("GetMaleUserList");
             // Get current user and filter list in parallel
             const [currentUser, { telegramIdFilter }] = await Promise.all([
                 this.telegramUserRepository.findOne({ where: { telegramId } }),
                 this.filterUserList(telegramId, 'M') // Assuming current user is male
             ]);
 
+            console.log(telegramIdFilter);
+            console.log(currentUser);
             if (!currentUser) {
                 console.error("User not found with the given telegramId");
                 return [];
@@ -246,8 +236,9 @@ export class TelegramUserService {
     //     }
     // }
 
-    async getFemaleUserList(telegramId: number): Promise<GetFemaleUserList[]> {
+    async getFemaleUserList(telegramId: string): Promise<GetFemaleUserList[]> {
         try {
+            console.log("GetFemaleUserList");
             const currentUser = await this.telegramUserRepository.findOne({ where: { telegramId } });
             if (!currentUser) {
                 console.error("User not found with the given telegramId");
@@ -316,7 +307,7 @@ export class TelegramUserService {
         }
     }
 
-    async likeUser(telegramId: number, likedTelegramId: number): Promise<boolean> {
+    async likeUser(telegramId: string, likedTelegramId: string): Promise<boolean> {
         // Get the QueryRunner from the repository's manager
         const queryRunner = this.telegramUserRepository.manager.connection.createQueryRunner();
         
@@ -364,7 +355,7 @@ export class TelegramUserService {
         }
     }
 
-    async unlikeUser(telegramId: number, unlikedTelegramId: number): Promise<boolean> {
+    async unlikeUser(telegramId: string, unlikedTelegramId: string): Promise<boolean> {
         if (unlikedTelegramId === undefined || unlikedTelegramId === null) {
             console.error("Invalid unlikedTelegramId");
             return false;
