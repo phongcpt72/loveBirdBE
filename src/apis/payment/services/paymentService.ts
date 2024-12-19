@@ -182,12 +182,9 @@ export class PaymentService {
 
     async acceptOffer(telegramIdMale: string, telegramIdFemale: string): Promise<boolean> {
         try {
-            // Improve validation to check for actual numbers
-            if (!telegramIdMale || !telegramIdFemale || 
-                !Number.isInteger(telegramIdMale) || !Number.isInteger(telegramIdFemale)) {
-                console.log('Invalid telegram IDs provided:', { telegramIdMale, telegramIdFemale });
-                return false;
-            }
+            console.log("acceptOffer");
+            console.log(telegramIdMale);
+            console.log(telegramIdFemale);
 
             // Check if both users exist
             const [maleExists, femaleExists] = await Promise.all([
