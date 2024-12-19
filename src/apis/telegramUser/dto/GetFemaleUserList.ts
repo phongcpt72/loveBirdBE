@@ -18,7 +18,7 @@ export class GetFemaleUserList {
     @Property()
     address!: string;
     @Property()
-    datingTime!: number;
+    datingTime!: string;
     @Property()
     hasOffered!: boolean;
     @Property()

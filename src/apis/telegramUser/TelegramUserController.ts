@@ -6,7 +6,7 @@ import { CreateTelegramUserDto } from "./dto/CreateTelegramUserDto";
 import { TelegramUserService } from "./services/telegramUserSevice";
 import { GetFemaleUserList } from "./dto/GetFemaleUserList";
 import { GetMaleUserList } from "./dto/GetMaleUserList";
-
+import { ActiveUserDto } from "./dto/ActiveUserDto";
 @Controller("/telegramusers")
 export class TelegramUserController {
 
@@ -87,4 +87,26 @@ export class TelegramUserController {
         }
     }
 
+    @Post("/update-active-user")
+    @Summary("Update active user")
+    @Returns(200, Boolean)
+    async updateActiveUser(
+        @BodyParams("telegramId") telegramId: string,
+        @BodyParams("activeTime") activeTime: string,
+        @Res() res: Res
+    ): Promise<void> {
+        const result = await this.telegramUserService.updateActiveUser(telegramId, activeTime);
+        if (result) {
+            res.status(200).send({ message: 'Active user time updated successfully' });
+        } else {
+            res.status(400).send({ message: 'Active user time update failed' });
+        }
+    }
+
+    @Get("/get-active-user")
+    @Summary("Get active user")
+    @Returns(200, ActiveUserDto)
+    async getActiveUser(@QueryParams("telegramId") telegramId: string): Promise<ActiveUserDto | null> {
+        return await this.telegramUserService.getActiveUser(telegramId);
+    }
 }

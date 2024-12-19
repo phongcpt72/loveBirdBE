@@ -14,5 +14,5 @@ export class CreateDatingLocation {
     @Property()
     long!: string;
     @Property()
-    datingTime!: number;
+    datingTime!: string;
 }

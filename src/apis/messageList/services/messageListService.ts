@@ -69,7 +69,7 @@ export class MessageListService {
                     chatURL: chatURLs[index] || '',
                     title: datingInfo?.title || '',
                     address: datingInfo?.address || '',
-                    datingTime: datingInfo?.datingTime || 0,
+                    datingTime: datingInfo?.datingTime || '',
                     hasDated: datingInfo?.hasDated || false
                 };
             }));
@@ -111,7 +111,7 @@ export class MessageListService {
                     chatURL: chatURLs[index] || '',
                     title: datingInfo?.title || '',
                     address: datingInfo?.address || '',
-                    datingTime: datingInfo?.datingTime || 0,
+                    datingTime: datingInfo?.datingTime || '',
                     hasDated: datingInfo?.hasDated || false
                 };
             }));
@@ -155,7 +155,7 @@ export class MessageListService {
                     chatURL: chatURLs[index] || '',
                     title: datingInfo?.title || '',
                     address: datingInfo?.address || '',
-                    datingTime: datingInfo?.datingTime || 0,
+                    datingTime: datingInfo?.datingTime || '',
                     hasDated: datingInfo?.hasDated || false
                 };
             }));

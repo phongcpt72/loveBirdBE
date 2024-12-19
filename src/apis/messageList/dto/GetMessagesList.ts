@@ -20,7 +20,7 @@ export class GetMessagesList {
     @Property()
     address!: string;
     @Property()
-    datingTime!: number;
+    datingTime!: string;
     @Property()
     hasDated!: boolean;
 }

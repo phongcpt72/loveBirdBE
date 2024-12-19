@@ -2,42 +2,26 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { Property, Required } from "@tsed/schema";
 
 
-@Entity("dating_information")
-export class DatingInformation {
+@Entity("active_user")
+export class ActiveUser {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ nullable: true })
   @Property()
-  telegramIdMale: string;
+  telegramId: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'bigint' })
   @Property()
-  telegramIdFemale: string;
+  followers: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: 'bigint' })
   @Property()
-  title: string;
-
-  @Column({ nullable: true })
-  @Property()
-  address: string;
-
-  @Column({ nullable: true })
-  @Property()
-  lat: string;
-
-  @Column({ nullable: true })
-  @Property()
-  long: string;
-
-  @Column({ nullable: true})
-  @Property()
-  datingTime: string;
+  holders: number;
   
   @Column({ nullable: true })
   @Property()
-  hasDated: boolean;
+  activeTime: string;
 
   @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
   public created_at: Date;
