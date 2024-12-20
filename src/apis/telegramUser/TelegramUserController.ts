@@ -22,8 +22,7 @@ export class TelegramUserController {
     @Res() res: Res
   ): Promise<void> {
     try {
-      const { telegramId, gender, username, age, avatarPublicId, avatar } = body;
-      const result = await this.telegramUserService.createTelegramUser(telegramId, gender, username, age, avatarPublicId, avatar);
+      const result = await this.telegramUserService.createTelegramUser(body);
       console.log(result);
       if (result) {
         res.status(201).send({ message: 'User created successfully' });
@@ -101,12 +100,5 @@ export class TelegramUserController {
         } else {
             res.status(400).send({ message: 'Active user time update failed' });
         }
-    }
-
-    @Get("/get-active-user")
-    @Summary("Get active user")
-    @Returns(200, ActiveUserDto)
-    async getActiveUser(@QueryParams("telegramId") telegramId: string): Promise<ActiveUserDto | null> {
-        return await this.telegramUserService.getActiveUser(telegramId);
     }
 }

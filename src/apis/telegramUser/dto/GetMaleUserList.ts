@@ -15,4 +15,10 @@ export class GetMaleUserList {
     videos!: string;
     @Property()
     hasLiked!: boolean;
+    @Property()
+    followers!: number;
+    @Property()
+    holders!: number;
+    @Property()
+    activeTime!: string;
 }

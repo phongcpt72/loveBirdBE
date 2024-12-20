@@ -75,6 +75,22 @@ export class TelegramUser {
   @Property()
   softDelete: boolean;
 
+  @Column({ nullable: true, type: 'bigint' })
+  @Property()
+  followers: number;
+
+  @Column({ nullable: true, type: 'bigint' })
+  @Property()
+  holders: number;
+  
+  @Column({ nullable: true })
+  @Property()
+  activeTime: string;
+
+  @Column({ nullable: true })
+  @Property()
+  isMuted: boolean;
+
   @CreateDateColumn({ type: "timestamp", default: () => "CURRENT_TIMESTAMP(6)" })
   public created_at: Date;
 

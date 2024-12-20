@@ -22,9 +22,9 @@ export class TelegramUserService {
     @Inject(DatingInformationService)
     private readonly datingInformationService: DatingInformationService;
 
-    async createTelegramUser(telegramId: string, gender: string, username: string, age: number, avatarPublicId: string, avatar: string): Promise<boolean> {   
-        
+    async createTelegramUser(CreateTelegramUserDto: CreateTelegramUserDto): Promise<boolean> {   
         try {
+            const { telegramId, gender, username, age, avatarPublicId, avatar } = CreateTelegramUserDto;
             const currentUser = await this.telegramUserRepository.findOne({ where: { telegramId} });
             if (currentUser) {
                 console.error("User already exists");
@@ -48,7 +48,11 @@ export class TelegramUserService {
             entity.workingPlace = "";
             entity.relationshipType = "";
             entity.bio = "";
+            entity.followers = 0;
+            entity.holders = 0;
             entity.softDelete = false;
+            entity.isMuted = false;
+            entity.activeTime = Date.now().toString();
             // Save using the queryRunner manager
             await this.telegramUserRepository.save(entity);
             return true;
@@ -99,7 +103,7 @@ export class TelegramUserService {
     } | null> {
         try {
             console.log(`getTelegramUser ${telegramId}`);
-            if (telegramId === undefined) {
+            if (!telegramId || telegramId === undefined || telegramId === "null") {
                 return { telegramId: null, username: null, gender: null, age: null, avatar: null, publicKey: null, balance: null, videos: null };
             }
 
@@ -169,7 +173,10 @@ export class TelegramUserService {
                 age: user.age,
                 avatar: user.avatar,
                 videos: user.videos,
-                hasLiked: user.likedUsers?.includes(currentUser.telegramId.toString()) || false
+                hasLiked: user.likedUsers?.includes(currentUser.telegramId.toString()) || false,
+                followers: user.followers,
+                holders: user.holders,
+                activeTime: user.activeTime,
             }));
     
             // Sort users who liked the current user to the beginning
@@ -244,7 +251,7 @@ export class TelegramUserService {
                             salary: user.salary,
                             workingPlace: user.workingPlace,
                             relationshipType: user.relationshipType,
-                            bio: user.bio
+                            bio: user.bio,
                         };
                     })
             );
@@ -345,26 +352,13 @@ export class TelegramUserService {
     }
 
     async updateActiveUser(telegramId: string, activeTime: string): Promise<boolean> {
-        const activeUser = await this.activeUserRepository.findOne({ where: { telegramId} });
-        if (!activeUser) {
+        const currentUser = await this.telegramUserRepository.findOne({ where: { telegramId } });
+        if (!currentUser) {
             return false;
         }
-        activeUser.activeTime = activeTime;
-        await this.activeUserRepository.save(activeUser);
+        currentUser.activeTime = activeTime;
+        await this.telegramUserRepository.save(currentUser);
         return true;
-    }
-
-    async getActiveUser(telegramId: string): Promise<ActiveUserDto | null> {
-        const activeUser = await this.activeUserRepository.findOne({ where: { telegramId } });
-        if (!activeUser) {
-            return null;
-        }
-        const activeUserDto = new ActiveUserDto();
-        activeUserDto.telegramId = activeUser.telegramId;
-        activeUserDto.followers = activeUser.followers;
-        activeUserDto.holders = activeUser.holders;
-        activeUserDto.activeTime = activeUser.activeTime;
-        return activeUserDto;
     }
 
 }

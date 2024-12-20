@@ -196,7 +196,7 @@ export class PaymentService {
                 console.log('One or both users do not exist:', { maleExists, femaleExists });
                 return false;
             }
-
+            
             // Find pending message with better error logging
             const messageList = await this.messageListRepository.findOne({
                 where: { 
