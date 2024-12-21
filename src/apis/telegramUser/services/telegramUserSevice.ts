@@ -7,6 +7,8 @@ import { GetFemaleUserList } from "../dto/GetFemaleUserList";
 import { GetMaleUserList } from "../dto/GetMaleUserList";
 import { DatingInformationService } from "../../datingLocation/services/DatingInformationService";
 import { ActiveUserDto } from "../dto/ActiveUserDto";
+import axios from "axios";
+
 @Injectable()
 export class TelegramUserService {
 
@@ -177,8 +179,9 @@ export class TelegramUserService {
                 followers: user.followers,
                 holders: user.holders,
                 activeTime: user.activeTime,
-            }));
-    
+                })
+                
+            );
             // Sort users who liked the current user to the beginning
             return userList.sort((a, b) => {
                 const aLikedMe = allFemaleUsers.find(u => u.telegramId === a.telegramId)?.likedUsers?.includes(currentUser.telegramId.toString()) ? 1 : 0;
@@ -189,6 +192,72 @@ export class TelegramUserService {
         } catch (error) {
             console.error("Error retrieving Telegram user information:", error);
             return [];
+        }
+    }
+
+    async sendLikeMessage(telegramIdMale: string, telegramIdFemale: string): Promise<boolean> {
+        try {
+            const [currentUser, { telegramIdFilter }] = await Promise.all([
+                this.telegramUserRepository.findOne({ where: { telegramId: telegramIdMale, softDelete: false } }),
+                this.filterUserList(telegramIdMale, 'M')
+            ]);
+
+            if (!currentUser) {
+                console.error("Current user not found");
+                return false;
+            }
+
+            const allFemaleUsers = await this.telegramUserRepository
+                .createQueryBuilder('user')
+                .select(['user.telegramId'])
+                .where('user.gender = :gender', { gender: 'F' })
+                .andWhere('user.telegramId NOT IN (:...telegramIdFilter)', { 
+                    telegramIdFilter: telegramIdFilter.length ? telegramIdFilter : [0] 
+                })
+                .andWhere('user.softDelete = :softDelete', { softDelete: false })
+                .andWhere('LENGTH(user.likedUsers) > 0')
+                .getMany();
+
+            const telegramIds = allFemaleUsers.map(user => user.telegramId);
+            const index = telegramIds.indexOf(telegramIdFemale);
+            if (index === -1) {
+                console.error("Female user not found in the list");
+                return false;
+            }
+
+            const urlForMale = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+            const dataForMale = {
+                chat_id: telegramIdMale,
+                text: "Someone likes you",
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            {
+                                text: "Who?",
+                                web_app: {
+                                    url: `https://staging.lvbrd.uk/dating/${telegramIdMale}?idx=${index}`
+                                }
+                            }
+                        ]
+                    ]
+                }
+            };
+
+            const maleResponse = await axios.post(urlForMale, dataForMale, {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if (maleResponse.status === 200) {
+                return true;
+            }
+
+            console.error('Failed to send message:', maleResponse.status);
+            return false;
+        } catch (error) {
+            console.error('Failed to send Telegram messages:', error);
+            return false;
         }
     }
 
@@ -271,7 +340,10 @@ export class TelegramUserService {
         // Start transaction
         await queryRunner.connect();
         await queryRunner.startTransaction();
-        
+        const checkLiked = await this.messageListRepository.findOne({ where: { telegramIdMale: likedTelegramId, telegramIdFemale: telegramId } });
+        if (checkLiked) {
+            return false;
+        }
         try {   
             const user = await queryRunner.manager.findOne(TelegramUser, { 
                 where: { telegramId } 
@@ -299,6 +371,7 @@ export class TelegramUserService {
             await queryRunner.manager.save(user);
             await queryRunner.manager.save(likedUser);
             // Commit the transaction
+            await this.sendLikeMessage(likedTelegramId,telegramId);
             await queryRunner.commitTransaction();
             return true;
         } catch (error) {

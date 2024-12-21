@@ -116,4 +116,20 @@ export class TelegramUserController {
             res.status(400).send({ message: 'User muted failed' });
         }
     }
+
+    @Post("/send-like-message")
+    @Summary("Send like message")
+    @Returns(200, Boolean)
+    async sendLikeMessage(
+        @BodyParams("telegramIdMale") telegramIdMale: string,
+        @BodyParams("telegramIdFemale") telegramIdFemale: string,
+        @Res() res: Res
+    ): Promise<void> {
+        const result = await this.telegramUserService.sendLikeMessage(telegramIdMale, telegramIdFemale);
+        if (result) {
+            res.status(200).send({ message: 'Like message sent successfully' });
+        } else {
+            res.status(400).send({ message: 'Like message send failed' });
+        }
+    }
 }
