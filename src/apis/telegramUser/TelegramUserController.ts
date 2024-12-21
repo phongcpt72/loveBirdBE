@@ -101,4 +101,19 @@ export class TelegramUserController {
             res.status(400).send({ message: 'Active user time update failed' });
         }
     }
+
+    @Post("/mute-user")
+    @Summary("Mute a user")
+    @Returns(200, Boolean)
+    async muteUser(
+        @BodyParams("telegramId") telegramId: string,
+        @Res() res: Res
+    ): Promise<void> {
+        const result = await this.telegramUserService.muteUser(telegramId);
+        if (result) {
+            res.status(200).send({ message: 'User muted successfully' });
+        } else {
+            res.status(400).send({ message: 'User muted failed' });
+        }
+    }
 }

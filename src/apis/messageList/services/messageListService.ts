@@ -4,11 +4,13 @@ import { MessageListRepository, MessageList, GroupChatLinkRepository } from "../
 import { TelegramUserService } from "../../telegramUser/services/telegramUserSevice";
 import { GetMessagesList } from "../dto/GetMessagesList";
 import { DatingInformationService } from "../../datingLocation/services/DatingInformationService";
+import axios from 'axios';
+
 
 @Injectable()
 export class MessageListService {
 
-    @Inject()
+    @Inject(TelegramUserService)
     private readonly telegramUserService: TelegramUserService;
 
     @Inject(MessageListRepository)
@@ -17,7 +19,7 @@ export class MessageListService {
     @Inject(GroupChatLinkRepository)
     private readonly groupChatLinkRepository: GroupChatLinkRepository;
 
-    @Inject()
+    @Inject(DatingInformationService)
     private readonly datingInformationService: DatingInformationService;
 
     async getMessagesList(telegramId: string): Promise<GetMessagesList[]> {
@@ -191,6 +193,11 @@ export class MessageListService {
         });
         return result.map(msg => msg.txHash);
     }
+
+
+    
+
+
 }
 
 

@@ -1,29 +1,22 @@
 import { Inject, Injectable } from "@tsed/di";
 import { In ,Not , IsNull} from "typeorm";
-import { DatingInformationRepository } from "../../../dal";
+import { DatingInformationRepository, TelegramUserRepository } from "../../../dal";
 import { DatingInformation } from "../../../dal/entity/DatingInformation";
 import { CreateDatingLocation } from "../dto/CreateDatingLocation";
+import axios from "axios";
+
 @Injectable()
 export class DatingInformationService {
 
     @Inject(DatingInformationRepository)
     private readonly datingInformationRepository: DatingInformationRepository;
 
+    @Inject(TelegramUserRepository)
+    private readonly telegramUserRepository: TelegramUserRepository;
+
 
    async createDatingLocation(datingInformation: CreateDatingLocation): Promise<boolean> {
     try {
-        // Check for existing records with the same telegram IDs
-        // const existingRecord = await this.datingInformationRepository.find({
-        //     where: [
-        //         { telegramIdFemale: datingInformation.telegramIdFemale },
-        //         { telegramIdMale: datingInformation.telegramIdMale }
-        //     ]
-        // });
-        // console.log(existingRecord);
-        // if (existingRecord) {
-        //     console.error('Telegram ID already exists in the database');
-        //     return false;
-        // }
         console.log(datingInformation);
         const entity = new DatingInformation();
         entity.telegramIdMale = datingInformation.telegramIdMale;
@@ -35,14 +28,62 @@ export class DatingInformationService {
         entity.datingTime = datingInformation.datingTime;
         entity.hasDated = false;
         await this.datingInformationRepository.save(entity);
+
+        await this.sendMessageAfterConfirmDating(datingInformation.telegramIdFemale);
+       
         return true;
 
     } catch (error) {
         console.error('Error creating dating location:', error);
         return false;
     }
+   } 
+   
+   async sendMessageAfterConfirmDating(telegramIdFemale: string): Promise<boolean> {
+    // Updated URL to set chat menu button
+    const urlForFemale = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const dataForFemale = {
+        chat_id: telegramIdFemale,
+        text: "Some just proposed you a date",
+        reply_markup: {
+            inline_keyboard: [
+                [
+                    {
+                        text: "Check now!",
+                        web_app: {
+                            url: `https://staging.lvbrd.uk/dating/${telegramIdFemale}/messages`
+                        }
+                    }
+                ]
+            ]
+        }
+    };
 
-   }   
+    try {
+        const [femaleResponse] = await Promise.all([
+            axios.post(urlForFemale, dataForFemale, {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+        ]);
+        
+        // Check if the requests were successful
+        if (femaleResponse.status === 200) {
+            return true;
+        }
+
+        console.error('Failed to send messages:', {
+            femaleStatus: femaleResponse.status
+        });
+
+        return false;
+    } catch (requestError) {
+        console.error('Failed to send Telegram messages:', requestError);
+        return false;
+    }
+}
+
 
     async getDateAndLocation(telegramIdMale: string, telegramIdFemale: string): Promise<{title: string,address :string,formattedDate: string, formattedTime: string,datingTime: string, hasDated: boolean} | null> {
         try {

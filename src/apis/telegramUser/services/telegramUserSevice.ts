@@ -361,4 +361,13 @@ export class TelegramUserService {
         return true;
     }
 
+    async muteUser(telegramId: string): Promise<boolean> {
+        const currentUser = await this.telegramUserRepository.findOne({ where: { telegramId } });
+        if (!currentUser) {
+            return false;
+        }
+        currentUser.isMuted = true;
+        await this.telegramUserRepository.save(currentUser);
+        return true;
+    }
 }

@@ -42,6 +42,7 @@ export class GroupChatService {
         const result = await this.groupChatLinkRepository.findOne({
             select: ["link"],
             where: { isUsed: false },
+            order: { id: "ASC" }
         });
         if (result) {
             await this.groupChatLinkRepository.update(

@@ -88,44 +88,6 @@ export class PaymentService {
         }
     }
 
-    // async buyShare(telegramIdBuyer: number, telegramIdFemale: number, tokenAddress: string): Promise<boolean> {
-    //     try {
-    //         if (telegramIdBuyer === undefined && telegramIdFemale === undefined) {
-    //             return false;
-    //         }
-    //         const buyer = await this.telegramUserRepository.findOne({
-    //             select: ["privateKey"],
-    //             where: { telegramId: telegramIdBuyer }
-    //         });
-
-    //         const female = await this.telegramUserRepository.findOne({
-    //             select: ["publicKey"],
-    //             where: { telegramId: telegramIdFemale }
-    //         });
-
-
-    //         if(buyer && female){
-    //             const result = await this.implementBuyShare(female.publicKey, 1, buyer.privateKey, tokenAddress);
-    //             if(result.status == 'success'){
-    //                 const messageList = new MessageList();
-    //                 messageList.telegramIdMale = telegramIdBuyer;
-    //                 messageList.telegramIdFemale = telegramIdFemale;
-    //                 messageList.txHash = result.txHash || '';
-    //                 messageList.status = "Pending"
-    //                 messageList.isPending = true;
-    //                 messageList.hasAccepted = false;
-    //                 await this.messageListRepository.save(messageList);
-    //                 return true;
-    //             }  
-    //         }
-    //         return false;
-            
-    //     } catch (error) {
-    //         console.error('Error buying share:', error);
-    //         return false;
-    //     }
-    // }
-
     async buyShare(telegramIdBuyer: string, telegramIdFemale: string, tokenAddress: string): Promise<boolean> {
             if (telegramIdBuyer === undefined && telegramIdFemale === undefined) {
                 return false;
@@ -217,7 +179,7 @@ export class PaymentService {
             messageList.hasAccepted = true;
             await this.messageListRepository.save(messageList);
             
-            await this.sendMessage(telegramIdMale, telegramIdFemale, messageList.txHash);
+            await this.messageAcceptOffer(telegramIdMale, telegramIdFemale, messageList.txHash);
             return true;
 
         } catch (error) {
@@ -226,30 +188,21 @@ export class PaymentService {
         }
     }
 
-    async sendMessage(telegramIdMale: string, telegramIdFemale: string, txHash: string): Promise<boolean> {
+    async messageAcceptOffer(telegramIdMale: string, telegramIdFemale: string, txHash: string): Promise<boolean> {
         try{
             const [userFemale, userMale] = await Promise.all([
-                this.telegramUserRepository.findOne({
-                    select: ["userName"],
-                    where: { telegramId: telegramIdFemale }
-                }),
-                this.telegramUserRepository.findOne({
-                    select: ["userName"],
-                    where: { telegramId: telegramIdMale }
-                })
+                this.telegramUserRepository.findOne({ select: ["userName"], where: { telegramId: telegramIdFemale } }),
+                this.telegramUserRepository.findOne({ select: ["userName"], where: { telegramId: telegramIdMale } })
             ]);
             const groupLink = await this.groupChatService.getGroupChatLink(txHash,telegramIdMale,telegramIdFemale);
             if (groupLink) {
-                try{
+                try {
                     await this.groupChatService.changeGroupName(
-                        userMale?.userName ?? 'User1', 
-                        userFemale?.userName ?? 'User2', 
+                        userMale?.userName ?? 'User1',
+                        userFemale?.userName ?? 'User2',
                         groupLink
                     );
-                    console.log("groupLink");
-                    console.log(groupLink);
-                }
-                catch(error){
+                } catch (error) {
                     console.error('Error changing group name:', error);
                     return false;
                 }
@@ -260,19 +213,28 @@ export class PaymentService {
 
             const {title, formattedDate, formattedTime} = dateAndLocation;
 
-            const messageForFemale = encodeURIComponent(`You have a Lovebird date with ${userMale?.userName} @ ${formattedTime} (${formattedDate}) ${title} ${groupLink}`);
-            const messageForMale = encodeURIComponent(`You have a Lovebird date with ${userFemale?.userName} @ ${formattedTime} (${formattedDate}) ${title} ${groupLink}`);
-
-            const urlForFemale = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${telegramIdFemale}&text=${messageForFemale}`;
-            const urlForMale = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${telegramIdMale}&text=${messageForMale}`;
+            const url = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+            const dataForFemale = {
+                chat_id: telegramIdFemale,
+                text: `You have accepted a date proposal from ${userMale?.userName} @ ${title} ${formattedDate.slice(0, -5)} ${formattedTime}`,
+                reply_markup: {
+                    inline_keyboard: [[{ text: "Chat", url: groupLink }]]
+                }
+            };
+            const dataForMale = {
+                chat_id: telegramIdMale,
+                text: `Your proposal date with ${userFemale?.userName} @ ${title} ${formattedDate.slice(0, -5)} ${formattedTime} has been accepted`,
+                reply_markup: {
+                    inline_keyboard: [[{ text: "Chat", url: groupLink }]]
+                }
+            };
 
             try {
                 const [femaleResponse, maleResponse] = await Promise.all([
-                    axios.get(urlForFemale),
-                    axios.get(urlForMale)
+                    axios.post(url, dataForFemale, { headers: { "Content-Type": "application/json" } }),
+                    axios.post(url, dataForMale, { headers: { "Content-Type": "application/json" } })
                 ]);
-                
-                // Check if the requests were successful
+
                 if (femaleResponse.status === 200 && maleResponse.status === 200) {
                     return true;
                 }
@@ -292,8 +254,5 @@ export class PaymentService {
             console.error('Error sending message:', error);
             return false;
         }
-
-
     }
-
 }

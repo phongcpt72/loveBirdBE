@@ -44,13 +44,4 @@ export class MessageListController {
         return await this.messageListService.getMessageListFemale(telegramId);
     }
 
-    // @Post("/create-group-invite-link")
-    // @Summary("Create group invite links")
-    // @Returns(200, String)
-    // async createGroupInviteLink(
-    //     @BodyParams("groupName") groupName: string
-    // ): Promise<string | null> {
-    //     return await this.groupChatService.createGroupInviteLink(groupName);
-    // }
-
 }

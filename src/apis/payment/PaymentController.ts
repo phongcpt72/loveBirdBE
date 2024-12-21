@@ -66,14 +66,14 @@ export class PaymentController {
     }
 
 
-    @Post("/send-message")
-    @Summary("Send message")
-    @Returns(201, String)
-    async sendMessage(
-        @BodyParams("telegramIdFemale") telegramIdFemale: string,
+    @Post("/send-message-after-accept-offer")
+    @Summary("Send message after accept offer")
+    @Returns(200, Boolean)
+    async sendMessageAfterAcceptOffer(
         @BodyParams("telegramIdMale") telegramIdMale: string,
-        @BodyParams("txHash") txHash: string
+        @BodyParams("telegramIdFemale") telegramIdFemale: string,
+        @BodyParams("txHash") txHash: string    
     ): Promise<boolean> {
-        return await this.paymentService.sendMessage(telegramIdFemale, telegramIdMale, txHash);
+        return await this.paymentService.messageAcceptOffer(telegramIdMale, telegramIdFemale, txHash);
     }
 }

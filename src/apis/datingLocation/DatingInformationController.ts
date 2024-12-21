@@ -49,6 +49,13 @@ export class DatingInformationController {
         res.status(500).send({ message: 'Internal server error', error: error.message });
     }
   }
+
+   @Post("/send-message-after-confirm-dating")
+    @Summary("Send message after confirm dating")
+    @Returns(200, Boolean)
+    async sendMessageAfterConfirmDating(@BodyParams("telegramIdFemale") telegramIdFemale: string): Promise<boolean> {
+        return await this.datingInformationService.sendMessageAfterConfirmDating(telegramIdFemale);
+    }
     
 
 }
